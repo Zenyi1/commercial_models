@@ -159,11 +159,14 @@ def resolve(
 
     # -- costs -------------------------------------------------------------- #
     s["cogs_pct"] = modality.default_cogs_pct
+    s["sga_pct"] = territory.sga_pct
+    s["distribution_pct"] = territory.distribution_pct
     s["treatment_duration_years"] = (
         asset.treatment_duration_years_override
         if asset.treatment_duration_years_override is not None
         else modality.default_treatment_duration_years
     )
+    s["one_time_annual_replenishment"] = modality.one_time_annual_replenishment
     s["filing_cost_usd"] = territory.filing_cost_usd
     s["market_access_spend_usd"] = _pick(
         ov.market_access_spend_usd, territory.market_access_spend_usd
@@ -182,9 +185,6 @@ def resolve(
     s["upfront_usd"] = deal.upfront_usd
     for i, m in enumerate(deal.milestones):
         s[f"milestone{i}_amount"] = m.amount_usd
-    s["licensee_cogs_pct"] = deal.licensee_cogs_pct
-    s["licensee_sga_pct"] = deal.licensee_sga_pct
-    s["licensee_distribution_pct"] = deal.licensee_distribution_pct
 
     return ResolvedInputs(
         asset_id=asset.id,

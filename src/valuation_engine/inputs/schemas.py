@@ -154,6 +154,12 @@ class ModalityPack(BaseModel):
     default_treatment_duration_years: SV = Field(
         default_factory=lambda: SourcedValue(value=1.0)
     )
+    # For one_time (curative) therapies: annual replenishment of the treatable
+    # prevalent pool as a fraction of the initial pool (new incident patients
+    # after the prevalent bolus is drawn down). Ignored for recurring dosing.
+    one_time_annual_replenishment: SV = Field(
+        default_factory=lambda: SourcedValue(value=0.03)
+    )
     cold_chain: bool = False
     notes: Optional[str] = None
 
@@ -196,6 +202,12 @@ class TerritoryPack(BaseModel):
     # Pricing.
     reference_price_factor: SV  # net price as fraction of global anchor
     annual_price_erosion: SV  # annual % net-price decline pre-LoE
+
+    # In-market commercialization economics (fraction of net sales). These
+    # define the intrinsic operating "pie"; the deal-split layer allocates that
+    # pie between licensor and licensee.
+    sga_pct: SV = Field(default_factory=lambda: SourcedValue(value=0.25))
+    distribution_pct: SV = Field(default_factory=lambda: SourcedValue(value=0.05))
 
     # Cost to enter/exploit the territory (USD).
     filing_cost_usd: SV
@@ -319,9 +331,3 @@ class DealTerms(BaseModel):
     upfront_usd: SV = Field(default_factory=lambda: SourcedValue(value=0.0))
     milestones: list[Milestone] = Field(default_factory=list)
     royalty_tiers: list[RoyaltyTier] = Field(default_factory=list)
-
-    # Licensee economics (for computing licensee value when the deal is a
-    # license). Fraction of net sales.
-    licensee_cogs_pct: SV = Field(default_factory=lambda: SourcedValue(value=0.15))
-    licensee_sga_pct: SV = Field(default_factory=lambda: SourcedValue(value=0.25))
-    licensee_distribution_pct: SV = Field(default_factory=lambda: SourcedValue(value=0.05))
