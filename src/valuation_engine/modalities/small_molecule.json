@@ -1,0 +1,21 @@
+{
+  "id": "small_molecule",
+  "name": "Small molecule",
+  "dosing": "recurring",
+  "default_cogs_pct": {
+    "value": 0.12, "low": 0.05, "high": 0.20, "kind": "pert", "unit": "fraction_of_net_sales",
+    "provenance": {
+      "method": "Industry-typical COGS band for branded small molecules",
+      "confidence": "low",
+      "notes": "Small molecules are cheap to manufacture; replace with asset-specific COGS when known."
+    }
+  },
+  "default_treatment_duration_years": {
+    "value": 5.0, "low": 1.0, "high": 15.0, "kind": "pert", "unit": "years",
+    "provenance": {"method": "Placeholder chronic-therapy persistence", "confidence": "assumption",
+      "notes": "Highly indication-specific; override per asset."}
+  },
+  "one_time_annual_replenishment": {"value": 0.0, "provenance": {"method": "N/A for recurring dosing", "confidence": "high"}},
+  "cold_chain": false,
+  "notes": "Recurring oral/systemic therapy. Duration and COGS are asset-specific placeholders."
+}

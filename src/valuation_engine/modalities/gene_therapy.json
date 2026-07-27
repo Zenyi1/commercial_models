@@ -1,0 +1,24 @@
+{
+  "id": "gene_therapy",
+  "name": "Gene therapy",
+  "dosing": "one_time",
+  "default_cogs_pct": {
+    "value": 0.35, "low": 0.20, "high": 0.55, "kind": "pert", "unit": "fraction_of_net_sales",
+    "provenance": {
+      "method": "Industry-typical COGS band for AAV/ex-vivo gene therapies",
+      "confidence": "low",
+      "notes": "High and variable manufacturing cost; vector/process dependent."
+    }
+  },
+  "default_treatment_duration_years": {"value": 1.0, "provenance": {"method": "Single administration", "confidence": "high"}},
+  "one_time_annual_replenishment": {
+    "value": 0.03, "low": 0.005, "high": 0.10, "kind": "pert", "unit": "fraction_of_initial_pool_per_year",
+    "provenance": {
+      "method": "Incident inflow into a treated prevalent pool (new diagnoses after bolus drawdown)",
+      "confidence": "assumption",
+      "notes": "Drives the tail after the prevalent bolus is treated; set from incidence/prevalence ratio when known."
+    }
+  },
+  "cold_chain": true,
+  "notes": "One-time curative therapy: models a prevalent-pool bolus drawn down over launch years plus incident replenishment. Delivery feasibility in EM is a real constraint (specialized centers, cold chain)."
+}

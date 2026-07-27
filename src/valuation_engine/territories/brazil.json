@@ -1,0 +1,53 @@
+{
+  "id": "brazil",
+  "name": "Brazil",
+  "iso3": "BRA",
+  "currency": "USD",
+  "fx_to_usd": {"value": 1.0, "provenance": {"method": "Pack values stored in USD", "confidence": "high"}},
+  "population": {
+    "value": 216000000, "low": 214000000, "high": 218000000, "kind": "pert", "unit": "people",
+    "provenance": {"source": "https://data.worldbank.org", "publisher": "World Bank", "as_of": "2024", "confidence": "high"}
+  },
+  "macro": {
+    "gdp_per_capita_usd": {"value": 10000, "provenance": {"source": "https://data.worldbank.org", "publisher": "World Bank", "as_of": "2023", "confidence": "high"}},
+    "health_exp_per_capita_usd": {"value": 1000, "provenance": {"source": "https://data.worldbank.org", "publisher": "World Bank (CHE per capita)", "as_of": "2021", "confidence": "medium"}},
+    "pct_gov_health": {"value": 0.44, "provenance": {"source": "https://data.worldbank.org", "publisher": "World Bank", "method": "Government share of current health expenditure (SUS ~ public)", "as_of": "2021", "confidence": "medium"}}
+  },
+  "base_discount_rate": {
+    "value": 0.085, "low": 0.07, "high": 0.10, "kind": "pert",
+    "provenance": {"method": "Real base WACC before country risk premium", "confidence": "low"}
+  },
+  "country_risk_premium": {
+    "value": 0.045, "low": 0.03, "high": 0.06, "kind": "pert",
+    "provenance": {"source": "https://pages.stern.nyu.edu/~adamodar/", "publisher": "Damodaran country risk premiums", "as_of": "2024", "confidence": "medium"}
+  },
+  "regulatory_review_years": {
+    "value": 1.2, "low": 0.5, "high": 2.5, "kind": "pert", "unit": "years",
+    "provenance": {"source": "https://resource.ddregpharma.com/blogs/drug-registration-process-in-brazil/", "publisher": "ANVISA", "method": "Technical review 120-365 days statutory; longer in practice with backlog", "confidence": "medium"}
+  },
+  "reimbursement_lag_years": {
+    "value": 1.5, "low": 0.5, "high": 3.0, "kind": "pert", "unit": "years",
+    "provenance": {"source": "https://www.ibanet.org/brazil-access-reimbursement-medicine", "publisher": "CMED + CONITEC (SUS)", "method": "CMED max-price then CONITEC 180-day HTA; real SUS incorporation 1-3y", "confidence": "low"}
+  },
+  "p_reimbursement_default": {
+    "value": 0.50, "kind": "bernoulli",
+    "provenance": {"method": "Prior probability of CONITEC/SUS incorporation (+ ANS private)", "confidence": "low", "notes": "Cost-effectiveness bar; note gene-therapy access via judicialization can override. Asset-specific."}
+  },
+  "private_channel_share": {
+    "value": 0.25, "low": 0.15, "high": 0.35, "kind": "pert",
+    "provenance": {"method": "Saude suplementar (private health) reach", "confidence": "low", "notes": "~1/4 of Brazilians hold private plans."}
+  },
+  "public_gtn_discount": {"value": 0.40, "low": 0.25, "high": 0.55, "kind": "pert", "provenance": {"method": "Public procurement gross-to-net (CMED-capped)", "confidence": "low"}},
+  "private_gtn_discount": {"value": 0.15, "low": 0.05, "high": 0.30, "kind": "pert", "provenance": {"method": "Private channel gross-to-net", "confidence": "low"}},
+  "reference_price_factor": {
+    "value": 0.45, "low": 0.30, "high": 0.65, "kind": "pert",
+    "provenance": {"source": "https://www.globallegalinsights.com/practice-areas/pricing-reimbursement-laws-and-regulations/brazil/", "publisher": "CMED", "method": "Net price fraction of global anchor under CMED price cap", "confidence": "low"}
+  },
+  "annual_price_erosion": {"value": 0.04, "low": 0.01, "high": 0.08, "kind": "pert", "provenance": {"method": "Annual net-price erosion pre-LoE", "confidence": "low"}},
+  "sga_pct": {"value": 0.25, "low": 0.15, "high": 0.35, "kind": "pert", "provenance": {"method": "In-market commercialization SG&A", "confidence": "low"}},
+  "distribution_pct": {"value": 0.08, "low": 0.04, "high": 0.12, "kind": "pert", "provenance": {"method": "Distribution/logistics share of net sales", "confidence": "low"}},
+  "filing_cost_usd": {"value": 400000, "low": 200000, "high": 800000, "kind": "pert", "provenance": {"method": "ANVISA registration + local representation", "confidence": "low"}},
+  "market_access_spend_usd": {"value": 3500000, "low": 1500000, "high": 7000000, "kind": "pert", "provenance": {"method": "Launch market-access investment", "confidence": "low"}},
+  "bridging_trial_cost_usd": {"value": 1000000, "low": 0, "high": 4000000, "kind": "pert", "provenance": {"method": "ANVISA may require local/regional data for some products", "confidence": "low"}},
+  "horizon_years": 20
+}

@@ -1,0 +1,53 @@
+{
+  "id": "mexico",
+  "name": "Mexico",
+  "iso3": "MEX",
+  "currency": "USD",
+  "fx_to_usd": {"value": 1.0, "provenance": {"method": "Pack values stored in USD", "confidence": "high"}},
+  "population": {
+    "value": 129000000, "low": 128000000, "high": 130000000, "kind": "pert", "unit": "people",
+    "provenance": {"source": "https://data.worldbank.org", "publisher": "World Bank", "as_of": "2024", "method": "Total population", "confidence": "high"}
+  },
+  "macro": {
+    "gdp_per_capita_usd": {"value": 13900, "provenance": {"source": "https://data.worldbank.org", "publisher": "World Bank", "as_of": "2023", "confidence": "high"}},
+    "health_exp_per_capita_usd": {"value": 620, "provenance": {"source": "https://data.worldbank.org", "publisher": "World Bank (CHE per capita)", "as_of": "2021", "confidence": "medium"}},
+    "pct_gov_health": {"value": 0.50, "provenance": {"source": "https://data.worldbank.org", "publisher": "World Bank", "method": "Government share of current health expenditure", "as_of": "2021", "confidence": "medium"}}
+  },
+  "base_discount_rate": {
+    "value": 0.085, "low": 0.07, "high": 0.10, "kind": "pert",
+    "provenance": {"method": "Real base WACC before country risk premium", "confidence": "low", "notes": "Set to firm WACC; CRP added separately."}
+  },
+  "country_risk_premium": {
+    "value": 0.035, "low": 0.025, "high": 0.05, "kind": "pert",
+    "provenance": {"source": "https://pages.stern.nyu.edu/~adamodar/", "publisher": "Damodaran country risk premiums", "as_of": "2024", "confidence": "medium"}
+  },
+  "regulatory_review_years": {
+    "value": 0.9, "low": 0.15, "high": 1.5, "kind": "pert", "unit": "years",
+    "provenance": {"source": "https://www.freyrsolutions.com/cofepris-abbreviated-pathway-an-opportunity-to-accelerate-drug-approvals-in-mexico", "publisher": "COFEPRIS", "method": "6-12 months standard; ~45 business days abbreviated pathway", "confidence": "medium"}
+  },
+  "reimbursement_lag_years": {
+    "value": 1.5, "low": 0.5, "high": 3.0, "kind": "pert", "unit": "years",
+    "provenance": {"source": "https://www.sciencedirect.com/science/article/pii/S221210991400065X", "publisher": "CSG / Cuadro Basico (CBCISS)", "method": "Formulary inclusion via Consejo de Salubridad General then IMSS/ISSSTE institutional adoption", "confidence": "low"}
+  },
+  "p_reimbursement_default": {
+    "value": 0.45, "kind": "bernoulli",
+    "provenance": {"method": "Prior probability of Cuadro Basico inclusion + institutional uptake", "confidence": "low", "notes": "Tight formulary and constrained public procurement; strongly asset-specific — refine via HTA/CSG research."}
+  },
+  "private_channel_share": {
+    "value": 0.35, "low": 0.2, "high": 0.5, "kind": "pert",
+    "provenance": {"method": "Out-of-pocket + private insurance share of pharma access", "confidence": "low", "notes": "Mexico has a large private/self-pay segment."}
+  },
+  "public_gtn_discount": {"value": 0.40, "low": 0.25, "high": 0.55, "kind": "pert", "provenance": {"method": "Public procurement/tender gross-to-net", "confidence": "low"}},
+  "private_gtn_discount": {"value": 0.15, "low": 0.05, "high": 0.30, "kind": "pert", "provenance": {"method": "Private channel gross-to-net", "confidence": "low"}},
+  "reference_price_factor": {
+    "value": 0.50, "low": 0.35, "high": 0.70, "kind": "pert",
+    "provenance": {"method": "Net price as fraction of US/global anchor", "confidence": "low", "notes": "Emerging-market pricing corridor; refine with reference-pricing data."}
+  },
+  "annual_price_erosion": {"value": 0.04, "low": 0.01, "high": 0.08, "kind": "pert", "provenance": {"method": "Annual net-price erosion pre-LoE", "confidence": "low"}},
+  "sga_pct": {"value": 0.25, "low": 0.15, "high": 0.35, "kind": "pert", "provenance": {"method": "In-market commercialization SG&A", "confidence": "low"}},
+  "distribution_pct": {"value": 0.08, "low": 0.04, "high": 0.12, "kind": "pert", "provenance": {"method": "Distribution/logistics share of net sales", "confidence": "low"}},
+  "filing_cost_usd": {"value": 300000, "low": 150000, "high": 600000, "kind": "pert", "provenance": {"method": "COFEPRIS registration + local representation", "confidence": "low"}},
+  "market_access_spend_usd": {"value": 3000000, "low": 1000000, "high": 6000000, "kind": "pert", "provenance": {"method": "Launch market-access investment", "confidence": "low"}},
+  "bridging_trial_cost_usd": {"value": 0, "provenance": {"method": "Local bridging data not routinely required for COFEPRIS with reference approval", "confidence": "low"}},
+  "horizon_years": 20
+}
