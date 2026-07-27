@@ -128,6 +128,15 @@ def run_model(
         years, entry, pub_start,
         params["private_channel_share"], params["p_reimbursement"],
     )
+    # Self-pay reach is gated by affordability: the private channel shrinks as
+    # the (per-year) net self-pay price climbs relative to local income. This is
+    # why an unreimbursed cheap drug retains most of its value out of pocket
+    # while an unreimbursed six-figure therapy does not.
+    afford = access.affordability_factor(
+        net_private, params["gdp_per_capita"],
+        params["affordability_multiple"], params["affordability_steepness"],
+    )
+    priv_frac = priv_frac * afford
 
     # -- patients & revenue ------------------------------------------------- #
     if resolved.dosing == "recurring":

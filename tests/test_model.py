@@ -16,7 +16,7 @@ from valuation_engine.inputs.schemas import (
 )
 from valuation_engine.inputs.resolve import resolve
 from valuation_engine.model import competition, epidemiology, pricing, uptake
-from valuation_engine.model.access import channel_fractions
+from valuation_engine.model.access import affordability_factor, channel_fractions
 from valuation_engine.model.deal import royalty_by_year
 from valuation_engine.rnpv import evaluate_base, run_model
 
@@ -77,6 +77,40 @@ def test_channel_fractions_gating():
     assert priv[0] == 0.0 and priv[2] == pytest.approx(0.2)  # private from entry
     assert pub[2] == 0.0  # before public start
     assert pub[4] == pytest.approx((1 - 0.2) * 0.5)  # public gated by reimbursement
+
+
+def test_affordability_factor_price_wall():
+    gdp = 14000.0
+    # Cheap drug -> near-full self-pay reach; at the reference price -> ~half;
+    # far above -> collapses toward zero.
+    cheap = affordability_factor(300.0, gdp, 2.0, 2.5)
+    at_ref = affordability_factor(2.0 * gdp, gdp, 2.0, 2.5)
+    expensive = affordability_factor(200_000.0, gdp, 2.0, 2.5)
+    assert cheap > 0.95
+    assert at_ref == pytest.approx(0.5, abs=1e-9)  # logistic is exactly 0.5 at ref
+    assert expensive < 0.05
+    assert cheap > at_ref > expensive
+
+
+def test_affordability_shrinks_unreimbursed_value_more_for_expensive_drug():
+    # Same market, no reimbursement, guaranteed launch: the fraction of value
+    # retained out-of-pocket must be lower for a much more expensive drug.
+    from valuation_engine.inputs.packs import load_modality, load_territory
+    from valuation_engine.rnpv import run_model
+
+    mod = load_modality("biologic")
+    terr = load_territory("mexico")
+    loa = SourcedValue(value=1.0, kind="bernoulli")
+
+    def retained_fraction(price):
+        asset = _biologic_asset(global_list_price_usd=price)
+        r = resolve(asset, mod, terr, loa)
+        base = r.base_params()
+        full = run_model(r, {**base, "p_territory_approval": 1.0}).pie_rnpv
+        noreimb = run_model(r, {**base, "p_reimbursement": 0.0, "p_territory_approval": 1.0}).pie_rnpv
+        return noreimb / full
+
+    assert retained_fraction(2_000) > retained_fraction(200_000)
 
 
 def test_tiered_royalty_known_answer():

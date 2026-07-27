@@ -288,6 +288,41 @@ def render_text(tv: TerritoryValuation, show_ledger: bool = True) -> str:
     return "\n".join(lines)
 
 
+def affordability_price_curve(
+    asset: AssetSpec,
+    modality: ModalityPack,
+    territory: TerritoryPack,
+    prices: list[float],
+    clinical_provider: Optional[ClinicalModelProvider] = None,
+    convention: str = "mid",
+) -> list[dict]:
+    """Show how self-pay (unreimbursed) value moves with price — the affordability wall.
+
+    For each candidate ``global_list_price_usd`` returns the reimbursed vs
+    self-pay-only rNPV (both conditioned on a successful launch, to isolate the
+    channel) and the retained fraction. Makes the "out-of-pocket heaven vs
+    affordability wall" trade-off explicit and defensible.
+    """
+    clinical_provider = clinical_provider or DefaultLoAProvider()
+    loa = clinical_provider.probability_of_launch(asset)
+    rows: list[dict] = []
+    for price in prices:
+        a = asset.model_copy(update={"global_list_price_usd": SourcedValue(value=price)})
+        resolved = resolve(a, modality, territory, loa)
+        base = resolved.base_params()
+        full = run_model(resolved, {**base, "p_territory_approval": 1.0}, convention).pie_rnpv
+        selfpay = run_model(
+            resolved, {**base, "p_reimbursement": 0.0, "p_territory_approval": 1.0}, convention
+        ).pie_rnpv
+        rows.append({
+            "price": price,
+            "reimbursed_rnpv": full,
+            "self_pay_rnpv": selfpay,
+            "retained_fraction": (selfpay / full) if full else 0.0,
+        })
+    return rows
+
+
 def render_portfolio(tvs: list[TerritoryValuation]) -> str:
     lines = ["", "#" * 72, "PORTFOLIO SUMMARY — territory rights value", "#" * 72,
              f"{'Territory':16s} {'Base rNPV':>12s} {'P10':>10s} {'P50':>10s} {'P90':>10s} "

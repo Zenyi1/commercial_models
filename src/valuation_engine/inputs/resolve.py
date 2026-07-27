@@ -128,6 +128,9 @@ def resolve(
         p_reimb = p_reimb.model_copy(update={"kind": "bernoulli"})
     s["p_reimbursement"] = p_reimb
     s["private_channel_share"] = territory.private_channel_share
+    s["affordability_multiple"] = territory.affordability_multiple
+    s["affordability_steepness"] = territory.affordability_steepness
+    s["gdp_per_capita"] = territory.macro.gdp_per_capita_usd
 
     # -- timing ------------------------------------------------------------- #
     s["regulatory_review_years"] = _pick(

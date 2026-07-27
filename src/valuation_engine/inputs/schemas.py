@@ -199,6 +199,12 @@ class TerritoryPack(BaseModel):
     public_gtn_discount: SV  # gross-to-net discount for public channel, 0..1
     private_gtn_discount: SV  # gross-to-net discount for private channel, 0..1
 
+    # Affordability of the self-pay channel. The reference price at which self-pay
+    # reach halves = affordability_multiple x GDP/capita; reach decays with a
+    # logistic of steepness. Defaults apply if a pack omits them.
+    affordability_multiple: SV = Field(default_factory=lambda: SourcedValue(value=2.0))
+    affordability_steepness: SV = Field(default_factory=lambda: SourcedValue(value=2.5))
+
     # Pricing.
     reference_price_factor: SV  # net price as fraction of global anchor
     annual_price_erosion: SV  # annual % net-price decline pre-LoE

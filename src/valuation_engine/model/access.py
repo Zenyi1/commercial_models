@@ -21,6 +21,35 @@ from __future__ import annotations
 import numpy as np
 
 
+def affordability_factor(
+    net_price: np.ndarray | float,
+    gdp_per_capita: float,
+    affordability_multiple: float,
+    steepness: float,
+) -> np.ndarray | float:
+    """Fraction of the self-pay segment that can actually afford the drug.
+
+    The private/self-pay channel is real in these markets — but its reach
+    collapses as the annual (or per-course) cost climbs past what the paying
+    segment can sustain. We anchor an *affordability reference price* to local
+    income: ``ref = affordability_multiple x gdp_per_capita`` (the private
+    segment skews wealthy/insured, hence a multiple > 1). Reach then follows a
+    logistic decay in price:
+
+        factor = 1 / (1 + (net_price / ref) ** steepness)
+
+    So a cheap drug keeps ~full self-pay reach (factor -> 1), a drug priced at
+    the reference gets half, and a six-figure therapy is driven toward zero —
+    the affordability wall. This is why an unreimbursed $300 pill and an
+    unreimbursed $200k gene therapy are worth very different amounts out of
+    pocket, even in the same "out-of-pocket" market.
+    """
+    ref = max(affordability_multiple * gdp_per_capita, 1e-9)
+    ratio = np.asarray(net_price, dtype=float) / ref
+    factor = 1.0 / (1.0 + np.power(ratio, steepness))
+    return factor
+
+
 def channel_fractions(
     years: np.ndarray,
     market_entry: float,

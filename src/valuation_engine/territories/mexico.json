@@ -39,6 +39,8 @@
   },
   "public_gtn_discount": {"value": 0.40, "low": 0.25, "high": 0.55, "kind": "pert", "provenance": {"method": "Public procurement/tender gross-to-net", "confidence": "low"}},
   "private_gtn_discount": {"value": 0.15, "low": 0.05, "high": 0.30, "kind": "pert", "provenance": {"method": "Private channel gross-to-net", "confidence": "low"}},
+  "affordability_multiple": {"value": 2.0, "low": 1.0, "high": 4.0, "kind": "pert", "provenance": {"method": "Self-pay reference price = multiple x GDP/capita (private segment skews wealthy/insured)", "confidence": "assumption"}},
+  "affordability_steepness": {"value": 2.5, "low": 1.5, "high": 4.0, "kind": "pert", "provenance": {"method": "Logistic steepness of self-pay reach vs price", "confidence": "assumption"}},
   "reference_price_factor": {
     "value": 0.50, "low": 0.35, "high": 0.70, "kind": "pert",
     "provenance": {"method": "Net price as fraction of US/global anchor", "confidence": "low", "notes": "Emerging-market pricing corridor; refine with reference-pricing data."}
