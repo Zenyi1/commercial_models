@@ -1,0 +1,599 @@
+{
+ "took": 99,
+ "timed_out": false,
+ "_shards": {
+  "total": 50,
+  "successful": 50,
+  "skipped": 0,
+  "failed": 0
+ },
+ "hits": {
+  "total": {
+   "value": 175,
+   "relation": "eq"
+  },
+  "max_score": 8.499305,
+  "hits": [
+   {
+    "_index": "edgar_file",
+    "_id": "0001193125-23-002398:d405031d8k.htm",
+    "_score": 8.499305,
+    "_source": {
+     "ciks": [
+      "0001501989"
+     ],
+     "period_ending": "2022-12-30",
+     "file_num": [
+      "001-37587"
+     ],
+     "display_names": [
+      "CytomX Therapeutics, Inc.  (CTMX)  (CIK 0001501989)"
+     ],
+     "xsl": null,
+     "sequence": 1,
+     "root_forms": [
+      "8-K"
+     ],
+     "file_date": "2023-01-05",
+     "biz_states": [
+      "CA"
+     ],
+     "sics": [
+      "2834"
+     ],
+     "form": "8-K",
+     "adsh": "0001193125-23-002398",
+     "film_num": [
+      "23511432"
+     ],
+     "biz_locations": [
+      "South San Francisco, CA"
+     ],
+     "file_type": "8-K",
+     "file_description": "8-K",
+     "inc_states": [],
+     "items": [
+      "1.01"
+     ]
+    }
+   },
+   {
+    "_index": "edgar_file",
+    "_id": "0001140361-23-000340:brhc10046238_8k.htm",
+    "_score": 8.458971,
+    "_source": {
+     "ciks": [
+      "0000748592"
+     ],
+     "period_ending": "2022-12-29",
+     "file_num": [
+      "001-11460"
+     ],
+     "display_names": [
+      "Eterna Therapeutics Inc.  (ERNA)  (CIK 0000748592)"
+     ],
+     "xsl": null,
+     "sequence": 1,
+     "root_forms": [
+      "8-K"
+     ],
+     "file_date": "2023-01-04",
+     "biz_states": [
+      "MA"
+     ],
+     "sics": [
+      "2834"
+     ],
+     "form": "8-K",
+     "adsh": "0001140361-23-000340",
+     "film_num": [
+      "23504457"
+     ],
+     "biz_locations": [
+      "Cambridge, MA"
+     ],
+     "file_type": "8-K",
+     "file_description": "8-K",
+     "inc_states": [
+      "DE"
+     ],
+     "items": [
+      "3.01",
+      "5.02",
+      "9.01"
+     ]
+    }
+   },
+   {
+    "_index": "edgar_file",
+    "_id": "0001437749-23-000499:gnpx20230103_8k.htm",
+    "_score": 8.400446,
+    "_source": {
+     "ciks": [
+      "0001595248"
+     ],
+     "period_ending": "2022-12-29",
+     "file_num": [
+      "001-38244"
+     ],
+     "display_names": [
+      "Genprex, Inc.  (GNPX)  (CIK 0001595248)"
+     ],
+     "xsl": null,
+     "sequence": 1,
+     "root_forms": [
+      "8-K"
+     ],
+     "file_date": "2023-01-05",
+     "biz_states": [
+      "TX"
+     ],
+     "sics": [
+      "2834"
+     ],
+     "form": "8-K",
+     "adsh": "0001437749-23-000499",
+     "film_num": [
+      "23512022"
+     ],
+     "biz_locations": [
+      "Austin, TX"
+     ],
+     "file_type": "8-K",
+     "file_description": "FORM 8-K",
+     "inc_states": [
+      "TX"
+     ],
+     "items": [
+      "1.01",
+      "7.01",
+      "9.01"
+     ]
+    }
+   }
+  ]
+ },
+ "aggregations": {
+  "entity_filter": {
+   "doc_count_error_upper_bound": 0,
+   "sum_other_doc_count": 94,
+   "buckets": [
+    {
+     "key": "PDS Biotechnology Corp  (PDSB)  (CIK 0001472091)",
+     "doc_count": 5
+    },
+    {
+     "key": "Party City Holdco Inc.  (CIK 0001592058)",
+     "doc_count": 5
+    },
+    {
+     "key": "EXPRESS, INC.  (EXPRQ)  (CIK 0001483510)",
+     "doc_count": 4
+    },
+    {
+     "key": "RespireRx Pharmaceuticals Inc.  (RSPI)  (CIK 0000849636)",
+     "doc_count": 4
+    },
+    {
+     "key": "Summit Therapeutics Inc.  (SMMT)  (CIK 0001599298)",
+     "doc_count": 4
+    },
+    {
+     "key": "Zomedica Corp.  (ZOM)  (CIK 0001684144)",
+     "doc_count": 4
+    },
+    {
+     "key": "BANK 2022-BNK41  (CIK 0001920442)",
+     "doc_count": 3
+    },
+    {
+     "key": "Bird Global, Inc.  (BRDSQ)  (CIK 0001861449)",
+     "doc_count": 3
+    },
+    {
+     "key": "GE HealthCare Technologies Inc.  (GEHC)  (CIK 0001932393)",
+     "doc_count": 3
+    },
+    {
+     "key": "Genprex, Inc.  (GNPX)  (CIK 0001595248)",
+     "doc_count": 3
+    },
+    {
+     "key": "MSA Safety Inc  (MSA, MNESP)  (CIK 0000066570)",
+     "doc_count": 3
+    },
+    {
+     "key": "Shockwave Medical, Inc.  (CIK 0001642545)",
+     "doc_count": 3
+    },
+    {
+     "key": "TPCO Holding Corp.  (GRAM, GRAMW)  (CIK 0001876945)",
+     "doc_count": 3
+    },
+    {
+     "key": "ARS Pharmaceuticals, Inc.  (SPRY)  (CIK 0001671858)",
+     "doc_count": 2
+    },
+    {
+     "key": "Alphatec Holdings, Inc.  (ATEC)  (CIK 0001350653)",
+     "doc_count": 2
+    },
+    {
+     "key": "BANK 2022-BNK44  (CIK 0001950141)",
+     "doc_count": 2
+    },
+    {
+     "key": "Calyxt, Inc.  (CBUS)  (CIK 0001705843)",
+     "doc_count": 2
+    },
+    {
+     "key": "Churchill Downs Inc  (CHDN)  (CIK 0000020212)",
+     "doc_count": 2
+    },
+    {
+     "key": "Cryomass Technologies, Inc.  (CRYM)  (CIK 0001533030)",
+     "doc_count": 2
+    },
+    {
+     "key": "DYADIC INTERNATIONAL INC  (DYAI)  (CIK 0001213809)",
+     "doc_count": 2
+    },
+    {
+     "key": "Denali Capital Acquisition Corp.  (DECA, DECAU, DECAW)  (CIK 0001913577)",
+     "doc_count": 2
+    },
+    {
+     "key": "Eterna Therapeutics Inc.  (ERNA)  (CIK 0000748592)",
+     "doc_count": 2
+    },
+    {
+     "key": "FENNEC PHARMACEUTICALS INC.  (FENC)  (CIK 0001211583)",
+     "doc_count": 2
+    },
+    {
+     "key": "GENERAL ELECTRIC CO  (GE)  (CIK 0000040545)",
+     "doc_count": 2
+    },
+    {
+     "key": "GreenLight Biosciences Holdings, PBC  (CIK 0001822691)",
+     "doc_count": 2
+    },
+    {
+     "key": "Mersana Therapeutics, Inc.  (MRSN)  (CIK 0001442836)",
+     "doc_count": 2
+    },
+    {
+     "key": "Ocuphire Pharma, Inc.  (OCUP)  (CIK 0001228627)",
+     "doc_count": 2
+    },
+    {
+     "key": "Phathom Pharmaceuticals, Inc.  (PHAT)  (CIK 0001783183)",
+     "doc_count": 2
+    },
+    {
+     "key": "ProFrac Holding Corp.  (ACDC)  (CIK 0001881487)",
+     "doc_count": 2
+    },
+    {
+     "key": "SELECTA BIOSCIENCES INC  (RNAC)  (CIK 0001453687)",
+     "doc_count": 2
+    }
+   ]
+  },
+  "sic_filter": {
+   "doc_count_error_upper_bound": 0,
+   "sum_other_doc_count": 18,
+   "buckets": [
+    {
+     "key": "2834",
+     "doc_count": 71
+    },
+    {
+     "key": "2836",
+     "doc_count": 15
+    },
+    {
+     "key": "3841",
+     "doc_count": 6
+    },
+    {
+     "key": "5900",
+     "doc_count": 6
+    },
+    {
+     "key": "6189",
+     "doc_count": 6
+    },
+    {
+     "key": "6770",
+     "doc_count": 6
+    },
+    {
+     "key": "5600",
+     "doc_count": 4
+    },
+    {
+     "key": "0100",
+     "doc_count": 3
+    },
+    {
+     "key": "3751",
+     "doc_count": 3
+    },
+    {
+     "key": "3842",
+     "doc_count": 3
+    },
+    {
+     "key": "3844",
+     "doc_count": 3
+    },
+    {
+     "key": "1389",
+     "doc_count": 2
+    },
+    {
+     "key": "2870",
+     "doc_count": 2
+    },
+    {
+     "key": "3420",
+     "doc_count": 2
+    },
+    {
+     "key": "3510",
+     "doc_count": 2
+    },
+    {
+     "key": "3533",
+     "doc_count": 2
+    },
+    {
+     "key": "3600",
+     "doc_count": 2
+    },
+    {
+     "key": "3674",
+     "doc_count": 2
+    },
+    {
+     "key": "3790",
+     "doc_count": 2
+    },
+    {
+     "key": "7374",
+     "doc_count": 2
+    },
+    {
+     "key": "7948",
+     "doc_count": 2
+    },
+    {
+     "key": "1000",
+     "doc_count": 1
+    },
+    {
+     "key": "1311",
+     "doc_count": 1
+    },
+    {
+     "key": "2000",
+     "doc_count": 1
+    },
+    {
+     "key": "2300",
+     "doc_count": 1
+    },
+    {
+     "key": "2670",
+     "doc_count": 1
+    },
+    {
+     "key": "2844",
+     "doc_count": 1
+    },
+    {
+     "key": "3578",
+     "doc_count": 1
+    },
+    {
+     "key": "3630",
+     "doc_count": 1
+    },
+    {
+     "key": "3661",
+     "doc_count": 1
+    }
+   ]
+  },
+  "biz_states_filter": {
+   "doc_count_error_upper_bound": 0,
+   "sum_other_doc_count": 0,
+   "buckets": [
+    {
+     "key": "CA",
+     "doc_count": 33
+    },
+    {
+     "key": "MA",
+     "doc_count": 26
+    },
+    {
+     "key": "NJ",
+     "doc_count": 21
+    },
+    {
+     "key": "NY",
+     "doc_count": 17
+    },
+    {
+     "key": "FL",
+     "doc_count": 9
+    },
+    {
+     "key": "TX",
+     "doc_count": 9
+    },
+    {
+     "key": "PA",
+     "doc_count": 8
+    },
+    {
+     "key": "IL",
+     "doc_count": 7
+    },
+    {
+     "key": "OH",
+     "doc_count": 7
+    },
+    {
+     "key": "MI",
+     "doc_count": 6
+    },
+    {
+     "key": "CO",
+     "doc_count": 4
+    },
+    {
+     "key": "MN",
+     "doc_count": 3
+    },
+    {
+     "key": "NC",
+     "doc_count": 3
+    },
+    {
+     "key": "VA",
+     "doc_count": 3
+    },
+    {
+     "key": "DE",
+     "doc_count": 2
+    },
+    {
+     "key": "E9",
+     "doc_count": 2
+    },
+    {
+     "key": "KY",
+     "doc_count": 2
+    },
+    {
+     "key": "MD",
+     "doc_count": 2
+    },
+    {
+     "key": "NV",
+     "doc_count": 2
+    },
+    {
+     "key": "X0",
+     "doc_count": 2
+    },
+    {
+     "key": "A1",
+     "doc_count": 1
+    },
+    {
+     "key": "A8",
+     "doc_count": 1
+    },
+    {
+     "key": "CT",
+     "doc_count": 1
+    },
+    {
+     "key": "P7",
+     "doc_count": 1
+    },
+    {
+     "key": "TN",
+     "doc_count": 1
+    },
+    {
+     "key": "U0",
+     "doc_count": 1
+    },
+    {
+     "key": "WA",
+     "doc_count": 1
+    }
+   ]
+  },
+  "form_filter": {
+   "doc_count_error_upper_bound": 0,
+   "sum_other_doc_count": 0,
+   "buckets": [
+    {
+     "key": "8-K",
+     "doc_count": 175
+    }
+   ]
+  }
+ },
+ "query": {
+  "_source": {
+   "exclude": [
+    "doc_text"
+   ]
+  },
+  "query": {
+   "bool": {
+    "must": [
+     {
+      "match_phrase": {
+       "doc_text": "license agreement"
+      }
+     }
+    ],
+    "must_not": [],
+    "should": [],
+    "filter": [
+     {
+      "terms": {
+       "root_forms": [
+        "8-K"
+       ]
+      }
+     },
+     {
+      "range": {
+       "file_date": {
+        "gte": "2023-01-01",
+        "lte": "2023-01-31"
+       }
+      }
+     }
+    ]
+   }
+  },
+  "from": 0,
+  "size": 100,
+  "aggregations": {
+   "form_filter": {
+    "terms": {
+     "field": "root_forms",
+     "size": 30
+    }
+   },
+   "entity_filter": {
+    "terms": {
+     "field": "display_names.raw",
+     "size": 30
+    }
+   },
+   "sic_filter": {
+    "terms": {
+     "field": "sics",
+     "size": 30
+    }
+   },
+   "biz_states_filter": {
+    "terms": {
+     "field": "biz_states",
+     "size": 30
+    }
+   }
+  }
+ }
+}
