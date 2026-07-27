@@ -18,7 +18,8 @@ from __future__ import annotations
 
 import argparse
 
-from valuation_engine.comparables.harvest import harvest, save_corpus
+from valuation_engine.comparables.harvest import harvest, load_corpus, save_corpus
+from valuation_engine.comparables.royalty import RoyaltyImputer
 from valuation_engine.research.data_sources.edgar import DEFAULT_QUERY, SecEdgarDealsSource
 
 
@@ -31,6 +32,10 @@ def main() -> None:
     ap.add_argument("--end", default="", help="YYYY-MM-DD")
     ap.add_argument("--limit", type=int, default=100)
     ap.add_argument("--no-fetch", action="store_true", help="list filings without extracting terms (fast)")
+    ap.add_argument("--impute-royalties", action="store_true",
+                    help="fill redacted royalty rates from disclosed comps (flagged as imputed)")
+    ap.add_argument("--calibrate-from", default=None,
+                    help="extra corpus JSON to calibrate royalty imputation (adds its disclosed rates)")
     ap.add_argument("--out", default="data/comparables/deals_edgar.json")
     args = ap.parse_args()
 
@@ -44,12 +49,24 @@ def main() -> None:
 
     print(f"Searching EDGAR: q={args.query!r} forms={args.forms} {args.start}..{args.end} limit={args.limit}")
     result = harvest([source])
-    save_corpus(result.records, args.out)
+    records = result.records
 
-    with_terms = sum(1 for r in result.records if r.upfront_usd is not None or r.peak_royalty_rate is not None)
-    with_royalty = sum(1 for r in result.records if r.peak_royalty_rate is not None)
-    print(f"Harvested {len(result.records)} filings ({result.duplicates_dropped} dupes dropped)")
-    print(f"  with extractable terms: {with_terms}   with royalty rate: {with_royalty}")
+    disclosed = sum(1 for r in records if r.peak_royalty_rate is not None)
+    if args.impute_royalties:
+        calibration = list(records)
+        if args.calibrate_from:
+            calibration += load_corpus(args.calibrate_from)
+        imputer = RoyaltyImputer(calibration)
+        print(f"Imputing royalties (calibrated on {imputer.coverage()['disclosed_rates']} disclosed rates; "
+              "industry prior where sparse). Imputed rows are flagged, not presented as disclosed.")
+        records = imputer.augment(records)
+
+    save_corpus(records, args.out)
+
+    with_terms = sum(1 for r in records if r.upfront_usd is not None or r.peak_royalty_rate is not None)
+    with_royalty = sum(1 for r in records if r.peak_royalty_rate is not None)
+    print(f"Harvested {len(records)} filings ({result.duplicates_dropped} dupes dropped)")
+    print(f"  with extractable terms: {with_terms}   royalty disclosed: {disclosed}   royalty total (incl imputed): {with_royalty}")
     print(f"  -> {args.out}")
 
 

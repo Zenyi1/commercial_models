@@ -221,17 +221,53 @@ def extract_deal_terms(text: str) -> dict:
         # Total deal value = upfront + milestones when both known, else milestones.
         out["total_value_usd"] = (out["upfront_usd"] or 0.0) + milestones
 
-    # Royalty: prefer a disclosed range (take the top/peak), else a single rate.
-    rng = re.search(r"(?i)royalt[^.%]{0,80}?(\d{1,2}(?:\.\d+)?)\s?%\s*(?:to|through|-|–|and)\s*(\d{1,2}(?:\.\d+)?)\s?%", text)
-    if rng:
-        out["peak_royalty_rate"] = float(rng.group(2)) / 100.0
-    else:
-        single = re.search(r"(?i)(\d{1,2}(?:\.\d+)?)\s?%\s*royalt|royalt[^.%]{0,60}?(\d{1,2}(?:\.\d+)?)\s?%", text)
-        if single:
-            pct = single.group(1) or single.group(2)
-            out["peak_royalty_rate"] = float(pct) / 100.0
-
+    out["peak_royalty_rate"] = _extract_royalty(text)
     return out
+
+
+# Plausible peak-tier royalty band. Rates above ~30% in filings are almost
+# always profit-shares or equity, not royalties; below 0.5% are usually
+# fragments. Values outside the band are rejected rather than trusted.
+ROYALTY_MIN, ROYALTY_MAX = 0.005, 0.30
+
+# Verbal royalty phrasings ("high single-digit royalties") -> representative
+# peak rate. Lower-fidelity than a stated number, but common and better than
+# discarding the signal.
+_VERBAL_ROYALTY = [
+    (r"high[\s-]*single[\s-]*digit", 0.085),
+    (r"mid[\s-]*single[\s-]*digit", 0.055),
+    (r"low[\s-]*single[\s-]*digit", 0.03),
+    (r"single[\s-]*digit", 0.05),
+    (r"high[\s-]*(?:double|teens?|ten)[\s-]*digit|high teens", 0.18),
+    (r"mid[\s-]*double[\s-]*digit", 0.15),
+    (r"low[\s-]*double[\s-]*digit|low teens", 0.12),
+    (r"double[\s-]*digit|teens", 0.13),
+]
+
+
+def _extract_royalty(text: str) -> Optional[float]:
+    # 1) numeric range near "royalt" -> take the top/peak, within plausibility band
+    rng = re.search(
+        r"(?i)royalt[^.%]{0,80}?(\d{1,2}(?:\.\d+)?)\s?%\s*(?:to|through|-|–|and)\s*(\d{1,2}(?:\.\d+)?)\s?%",
+        text,
+    )
+    if rng:
+        rate = float(rng.group(2)) / 100.0
+        if ROYALTY_MIN <= rate <= ROYALTY_MAX:
+            return rate
+    # 2) a single numeric rate adjacent to "royalt"
+    single = re.search(r"(?i)(\d{1,2}(?:\.\d+)?)\s?%\s*royalt|royalt[^.%]{0,60}?(\d{1,2}(?:\.\d+)?)\s?%", text)
+    if single:
+        rate = float(single.group(1) or single.group(2)) / 100.0
+        if ROYALTY_MIN <= rate <= ROYALTY_MAX:
+            return rate
+    # 3) verbal band near "royalt"
+    for m in re.finditer(r"(?i)royalt\w*", text):
+        window = text[max(0, m.start() - 40): m.end() + 40]
+        for pattern, value in _VERBAL_ROYALTY:
+            if re.search("(?i)" + pattern, window):
+                return value
+    return None
 
 
 def classify_modality(text: str) -> str:

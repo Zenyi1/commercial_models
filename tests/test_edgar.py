@@ -103,6 +103,18 @@ def test_single_royalty_rate():
     assert extract_deal_terms(text)["peak_royalty_rate"] == pytest.approx(0.12)
 
 
+def test_implausible_royalty_rejected():
+    # A "50% of profits" figure is a profit-share, not a royalty -> rejected.
+    assert extract_deal_terms("royalties of up to 50% of net profits")["peak_royalty_rate"] is None
+    # A 24% peak tier is plausible and kept.
+    assert extract_deal_terms("a 24% royalty on net sales")["peak_royalty_rate"] == pytest.approx(0.24)
+
+
+def test_verbal_royalty_bands():
+    assert extract_deal_terms("high single-digit royalties on net sales")["peak_royalty_rate"] == pytest.approx(0.085)
+    assert extract_deal_terms("eligible for low double-digit royalties")["peak_royalty_rate"] == pytest.approx(0.12)
+
+
 def test_modality_and_stage_keywords():
     assert classify_modality("an AAV gene therapy program") == "gene_therapy"
     assert classify_modality("a small molecule inhibitor") == "small_molecule"
