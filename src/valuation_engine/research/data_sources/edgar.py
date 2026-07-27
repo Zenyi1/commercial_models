@@ -159,3 +159,98 @@ def _html_to_text(html: str) -> str:
                 .replace("&#160;", " ").replace("&#8217;", "'").replace("&rsquo;", "'"))
     text = re.sub(r"\s+", " ", text)
     return text.strip()
+
+
+# --------------------------------------------------------------------------- #
+# Extraction (pure, testable) — populate a field only when confident, else None.
+# --------------------------------------------------------------------------- #
+import re  # noqa: E402
+
+_UNIT = {"billion": 1e9, "million": 1e6, "thousand": 1e3}
+_MONEY = r"\$\s?([\d,]+(?:\.\d+)?)\s*(billion|million|thousand)?"
+
+
+def _to_usd(num: str, unit: Optional[str]) -> float:
+    return float(num.replace(",", "")) * _UNIT.get((unit or "").lower(), 1.0)
+
+
+def extract_deal_terms(text: str) -> dict:
+    """Extract upfront, total (biobucks) and peak royalty from filing text.
+
+    Conservative: matches common disclosure phrasings and returns ``None`` for
+    anything not found (royalty rates are frequently redacted). Values are USD.
+    """
+    out: dict[str, Optional[float]] = {
+        "upfront_usd": None, "total_value_usd": None, "peak_royalty_rate": None,
+    }
+
+    m = re.search(r"(?i)upfront[^.$]{0,60}?" + _MONEY, text)
+    if m:
+        out["upfront_usd"] = _to_usd(m.group(1), m.group(2))
+
+    # Milestones / biobucks — "milestone payments of up to $X billion", or a
+    # nearby "up to $X".
+    m = re.search(r"(?i)(?:milestone[s]?[^.$]{0,80}?up to|up to[^.$]{0,40}?milestone[s]?[^.$]{0,40}?)"
+                  + _MONEY, text)
+    if not m:
+        m = re.search(r"(?i)milestone[s]?[^.$]{0,60}?" + _MONEY, text)
+    if m:
+        milestones = _to_usd(m.group(1), m.group(2))
+        # Total deal value = upfront + milestones when both known, else milestones.
+        out["total_value_usd"] = (out["upfront_usd"] or 0.0) + milestones
+
+    # Royalty: prefer a disclosed range (take the top/peak), else a single rate.
+    rng = re.search(r"(?i)royalt[^.%]{0,80}?(\d{1,2}(?:\.\d+)?)\s?%\s*(?:to|through|-|–|and)\s*(\d{1,2}(?:\.\d+)?)\s?%", text)
+    if rng:
+        out["peak_royalty_rate"] = float(rng.group(2)) / 100.0
+    else:
+        single = re.search(r"(?i)(\d{1,2}(?:\.\d+)?)\s?%\s*royalt|royalt[^.%]{0,60}?(\d{1,2}(?:\.\d+)?)\s?%", text)
+        if single:
+            pct = single.group(1) or single.group(2)
+            out["peak_royalty_rate"] = float(pct) / 100.0
+
+    return out
+
+
+def classify_modality(text: str) -> str:
+    t = text.lower()
+    if any(k in t for k in ("gene therapy", "aav", "gene-therapy", "cell therapy", "car-t", "car t")):
+        return "gene_therapy"
+    if any(k in t for k in ("monoclonal antibody", "antibody", "biologic", "mab", "fusion protein", "mrna", "protein")):
+        return "biologic"
+    if any(k in t for k in ("small molecule", "small-molecule", "oral", "inhibitor", "compound")):
+        return "small_molecule"
+    return "other"
+
+
+def classify_stage(text: str) -> str:
+    t = text.lower()
+    for phrase, stage in (
+        ("phase 3", "phase3"), ("phase iii", "phase3"),
+        ("phase 2", "phase2"), ("phase ii", "phase2"),
+        ("phase 1", "phase1"), ("phase i", "phase1"),
+        ("preclinical", "preclinical"), ("pre-clinical", "preclinical"),
+    ):
+        if phrase in t:
+            return stage
+    if "fda-approved" in t or "fda approved" in t:
+        return "approved"
+    return "unknown"
+
+
+def extract_regions(text: str) -> list[str]:
+    t = text.lower()
+    regions: list[str] = []
+    if "worldwide" in t or "global" in t:
+        regions.append("global")
+    if "ex-u.s." in t or "ex-us" in t or "outside the united states" in t:
+        regions.append("ex_us")
+    if "latin america" in t:
+        regions.append("latam")
+    if "middle east" in t or "mena" in t:
+        regions.append("mena")
+    if "greater china" in t or ("china" in t and "china" != t):
+        regions.append("china")
+    if "japan" in t:
+        regions.append("japan")
+    return regions or ["global"]
