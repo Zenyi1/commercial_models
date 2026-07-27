@@ -19,11 +19,15 @@ never guessed.
 from __future__ import annotations
 
 import json
+import os
 import time
 import urllib.parse
 import urllib.request
 from dataclasses import dataclass
 from typing import Optional
+
+from valuation_engine.comparables.harvest import DealsSource
+from valuation_engine.comparables.schema import DealRecord
 
 EFTS_URL = "https://efts.sec.gov/LATEST/search-index"
 ARCHIVES_URL = "https://www.sec.gov/Archives/edgar/data"
@@ -174,6 +178,31 @@ def _to_usd(num: str, unit: Optional[str]) -> float:
     return float(num.replace(",", "")) * _UNIT.get((unit or "").lower(), 1.0)
 
 
+def _amount_near(text: str, keyword: str, window: int = 70) -> Optional[float]:
+    """USD amount of the money token *closest* to ``keyword`` on either side.
+
+    Money commonly precedes the keyword ("$170 million in upfront payments") as
+    often as it follows it, so we search a symmetric window and pick the nearest
+    match. A magnitude unit (million/billion/thousand) is required, which avoids
+    grabbing stray "$5" fragments and share-price figures.
+    """
+    best: Optional[float] = None
+    best_dist = 10**9
+    for km in re.finditer(re.escape(keyword), text, re.I):
+        kpos = (km.start() + km.end()) // 2
+        lo, hi = max(0, kpos - window), kpos + window
+        segment = text[lo:hi]
+        for mm in re.finditer(_MONEY, segment):
+            if not mm.group(2):  # require an explicit unit
+                continue
+            mpos = lo + (mm.start() + mm.end()) // 2
+            dist = abs(mpos - kpos)
+            if dist < best_dist:
+                best_dist = dist
+                best = _to_usd(mm.group(1), mm.group(2))
+    return best
+
+
 def extract_deal_terms(text: str) -> dict:
     """Extract upfront, total (biobucks) and peak royalty from filing text.
 
@@ -184,18 +213,11 @@ def extract_deal_terms(text: str) -> dict:
         "upfront_usd": None, "total_value_usd": None, "peak_royalty_rate": None,
     }
 
-    m = re.search(r"(?i)upfront[^.$]{0,60}?" + _MONEY, text)
-    if m:
-        out["upfront_usd"] = _to_usd(m.group(1), m.group(2))
+    out["upfront_usd"] = _amount_near(text, "upfront")
 
-    # Milestones / biobucks — "milestone payments of up to $X billion", or a
-    # nearby "up to $X".
-    m = re.search(r"(?i)(?:milestone[s]?[^.$]{0,80}?up to|up to[^.$]{0,40}?milestone[s]?[^.$]{0,40}?)"
-                  + _MONEY, text)
-    if not m:
-        m = re.search(r"(?i)milestone[s]?[^.$]{0,60}?" + _MONEY, text)
-    if m:
-        milestones = _to_usd(m.group(1), m.group(2))
+    # Milestones / biobucks: the amount near "milestone(s)".
+    milestones = _amount_near(text, "milestone")
+    if milestones is not None:
         # Total deal value = upfront + milestones when both known, else milestones.
         out["total_value_usd"] = (out["upfront_usd"] or 0.0) + milestones
 
@@ -254,3 +276,88 @@ def extract_regions(text: str) -> list[str]:
     if "japan" in t:
         regions.append("japan")
     return regions or ["global"]
+
+
+def _deal_type_from_regions(regions: list[str]) -> str:
+    if "global" in regions:
+        return "global_license"
+    if "ex_us" in regions:
+        return "ex_us_license"
+    return "regional_license"
+
+
+# Default query: license/collaboration agreements likely to disclose economics.
+DEFAULT_QUERY = '"license agreement" "upfront"'
+
+
+class SecEdgarDealsSource(DealsSource):
+    """Harvest real deals from EDGAR full-text search + filing extraction.
+
+    Enabled when a SEC ``user_agent`` (with contact email) is provided, directly
+    or via ``SEC_EDGAR_USER_AGENT``. Each hit becomes a :class:`DealRecord`
+    sourced to the filing URL; term fields are filled only where extraction is
+    confident. Set ``fetch_documents=False`` to list filings without pulling
+    each document (fast, terms left None).
+    """
+
+    name = "sec_edgar"
+
+    def __init__(
+        self,
+        user_agent: Optional[str] = None,
+        query: str = DEFAULT_QUERY,
+        forms: str = "8-K",
+        startdt: str = "",
+        enddt: str = "",
+        limit: int = 50,
+        fetch_documents: bool = True,
+    ):
+        self.user_agent = user_agent or os.getenv("SEC_EDGAR_USER_AGENT")
+        self.query = query
+        self.forms = forms
+        self.startdt = startdt
+        self.enddt = enddt
+        self.limit = limit
+        self.fetch_documents = fetch_documents
+
+    def available(self) -> bool:
+        return bool(self.user_agent)
+
+    def _make_client(self) -> EdgarClient:
+        return EdgarClient(self.user_agent)
+
+    def _record_from_hit(self, client: EdgarClient, hit: EdgarHit) -> DealRecord:
+        terms: dict = {"upfront_usd": None, "total_value_usd": None, "peak_royalty_rate": None}
+        modality, stage, regions = "other", "unknown", ["global"]
+        if self.fetch_documents:
+            try:
+                text = client.fetch_document_text(hit)
+                terms = extract_deal_terms(text)
+                modality = classify_modality(text)
+                stage = classify_stage(text)
+                regions = extract_regions(text)
+            except Exception:  # a single bad document must not abort the harvest
+                pass
+        has_terms = terms["upfront_usd"] is not None or terms["peak_royalty_rate"] is not None
+        return DealRecord(
+            id=hit.accession,
+            licensor=hit.filer_name,
+            modality=modality,
+            stage=stage,
+            deal_type=_deal_type_from_regions(regions),
+            regions=regions,
+            date=hit.file_date,
+            upfront_usd=terms["upfront_usd"],
+            total_value_usd=terms["total_value_usd"],
+            peak_royalty_rate=terms["peak_royalty_rate"],
+            source=hit.document_url,
+            confidence="medium" if has_terms else "low",
+            notes=f"Auto-extracted from {hit.form} filed by {hit.filer_name}; verify terms against the filing.",
+        )
+
+    def fetch(self) -> list[DealRecord]:
+        if not self.available():
+            return []
+        client = self._make_client()
+        hits = client.search(self.query, self.forms, self.startdt, self.enddt, self.limit)
+        return [self._record_from_hit(client, h) for h in hits]

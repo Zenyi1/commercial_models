@@ -53,21 +53,9 @@ class FileDealsSource(DealsSource):
         return [DealRecord.model_validate(r) for r in raw]
 
 
-class SecEdgarDealsSource(DealsSource):
-    """Primary-filing deals from SEC EDGAR (8-K/10-K). Config-gated stub."""
-
-    name = "sec_edgar"
-
-    def available(self) -> bool:
-        return bool(os.getenv("SEC_EDGAR_ENABLED"))
-
-    def fetch(self) -> list[DealRecord]:  # pragma: no cover
-        if not self.available():
-            return []
-        raise NotImplementedError(
-            "Wire SEC EDGAR full-text search + 8-K/10-K extraction here; "
-            "return DealRecords with source set to the filing URL."
-        )
+# The real SEC EDGAR deals source lives in
+# ``valuation_engine.research.data_sources.edgar.SecEdgarDealsSource`` (it depends
+# on the EDGAR client). Import it from there; it implements this DealsSource API.
 
 
 class CommercialDbDealsSource(DealsSource):

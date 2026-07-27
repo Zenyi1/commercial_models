@@ -11,6 +11,7 @@ import pytest
 
 from valuation_engine.research.data_sources.edgar import (
     EdgarClient,
+    SecEdgarDealsSource,
     classify_modality,
     classify_stage,
     extract_deal_terms,
@@ -81,6 +82,17 @@ def test_classify_from_real_excerpt():
     assert classify_modality(text) == "other"
 
 
+def test_upfront_amount_can_precede_keyword():
+    # Real failure mode: "$170 million in upfront payments and ... $3 billion in
+    # milestones" — the amount precedes the keyword and a larger distractor
+    # follows it. Nearest-money must pick $170M, not $3B.
+    text = ("Mersana with $170 million in upfront payments and an opportunity "
+            "for more than $3 billion in milestones")
+    terms = extract_deal_terms(text)
+    assert terms["upfront_usd"] == 170_000_000.0
+    assert terms["total_value_usd"] == pytest.approx(170_000_000.0 + 3_000_000_000.0)
+
+
 def test_royalty_range_takes_peak():
     text = "tiered royalties ranging from 8% to 15% on net sales"
     assert extract_deal_terms(text)["peak_royalty_rate"] == pytest.approx(0.15)
@@ -101,3 +113,50 @@ def test_modality_and_stage_keywords():
 def test_missing_terms_return_none():
     terms = extract_deal_terms("The parties entered into a collaboration agreement.")
     assert terms == {"upfront_usd": None, "total_value_usd": None, "peak_royalty_rate": None}
+
+
+# --------------------------------------------------------------------------- #
+# SecEdgarDealsSource end-to-end with a stubbed client (no network)
+# --------------------------------------------------------------------------- #
+class _FakeClient:
+    def __init__(self, hits, text):
+        self._hits, self._text = hits, text
+
+    def search(self, *a, **k):
+        return self._hits
+
+    def fetch_document_text(self, hit):
+        return self._text
+
+
+def test_source_unavailable_without_user_agent(monkeypatch):
+    monkeypatch.delenv("SEC_EDGAR_USER_AGENT", raising=False)
+    assert SecEdgarDealsSource(user_agent=None).available() is False
+    assert SecEdgarDealsSource(user_agent=None).fetch() == []
+
+
+def test_source_builds_deal_records(payload):
+    hits = parse_search_results(payload)
+    text = EXCERPT.read_text()
+    src = SecEdgarDealsSource(user_agent="FirstOcean Research you@example.com")
+    src._make_client = lambda: _FakeClient(hits, text)  # inject stub
+
+    records = src.fetch()
+    assert len(records) == 3
+    r = records[0]
+    # sourced to the real filing URL, terms extracted, not fabricated
+    assert r.source.startswith("https://www.sec.gov/Archives/edgar/data/")
+    assert r.upfront_usd == 35_000_000.0
+    assert r.regions == ["global"] and r.deal_type == "global_license"
+    assert r.licensor == "CytomX Therapeutics, Inc."
+    assert r.confidence == "medium"  # had extractable terms
+
+
+def test_source_records_are_valid_for_analyzer(payload):
+    from valuation_engine.comparables.analyzer import ComparablesAnalyzer
+    hits = parse_search_results(payload)
+    src = SecEdgarDealsSource(user_agent="FirstOcean Research you@example.com")
+    src._make_client = lambda: _FakeClient(hits, EXCERPT.read_text())
+    an = ComparablesAnalyzer(src.fetch())
+    b = an.upfront_benchmark()
+    assert b.n >= 1 and b.p50 is not None
