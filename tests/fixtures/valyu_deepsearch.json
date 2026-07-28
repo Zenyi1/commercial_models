@@ -1,0 +1,28 @@
+{
+  "success": true,
+  "error": null,
+  "query": "probability a branded gout drug is reimbursed on the public formulary in Brazil",
+  "results": [
+    {
+      "title": "CONITEC incorporation decisions for gout therapies",
+      "url": "https://www.gov.br/conitec/report-2023-gout",
+      "source": "gov.br/conitec",
+      "relevance_score": 0.91,
+      "content": "Access to novel urate-lowering therapies remains limited. Historically, only about 45% of branded gout drugs submitted to CONITEC have been recommended for reimbursement in the public SUS formulary. The typical interval from ANVISA approval to public listing is roughly 2 years."
+    },
+    {
+      "title": "Gout epidemiology in Latin America",
+      "url": "https://pubmed.ncbi.nlm.nih.gov/example-gout-epi",
+      "source": "pubmed",
+      "relevance_score": 0.83,
+      "content": "The prevalence of gout in the adult Brazilian population is estimated at 2,600 per 100,000. Diagnosis remains a challenge: fewer than 50% of cases are formally diagnosed, and of those diagnosed only around 40% receive appropriate urate-lowering drug therapy."
+    },
+    {
+      "title": "Pharma launch economics in emerging markets",
+      "url": "https://example.com/launch-costs",
+      "source": "example.com",
+      "relevance_score": 0.71,
+      "content": "A typical product launch and market-access investment in Brazil runs to about $3.5 million over the first two years, driven by KOL engagement and payer dossiers."
+    }
+  ]
+}

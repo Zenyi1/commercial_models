@@ -95,11 +95,12 @@ def resolve(
     s: dict[str, SourcedValue] = {}
 
     # -- epidemiology ------------------------------------------------------- #
+    # Asset×territory research (ov.*) overrides the asset's global epi block.
     s["population"] = territory.population
-    s["epi_rate_per_100k"] = epi.rate_per_100k
-    s["diagnosis_rate"] = epi.diagnosis_rate
-    s["treatment_rate"] = epi.treatment_rate
-    s["eligible_fraction"] = epi.eligible_fraction
+    s["epi_rate_per_100k"] = _pick(ov.epi_rate_per_100k, epi.rate_per_100k)
+    s["diagnosis_rate"] = _pick(ov.diagnosis_rate, epi.diagnosis_rate)
+    s["treatment_rate"] = _pick(ov.treatment_rate, epi.treatment_rate)
+    s["eligible_fraction"] = _pick(ov.eligible_fraction, epi.eligible_fraction)
 
     # -- pricing ------------------------------------------------------------ #
     if ov.net_price_usd is not None:

@@ -253,6 +253,14 @@ class TerritoryAssetInputs(BaseModel):
     peak_share: Optional[SV] = None
     launch_delay_years: Optional[SV] = None  # extra delay (launch sequencing)
     market_access_spend_usd: Optional[SV] = None
+    # Epidemiology funnel overrides — the single biggest driver of the pie, and
+    # genuinely asset×territory (prevalence and treatment patterns differ by
+    # country). Any set here overrides the asset's global EpidemiologyBlock for
+    # this territory, so researched local data can flow straight into the model.
+    epi_rate_per_100k: Optional[SV] = None
+    diagnosis_rate: Optional[SV] = None
+    treatment_rate: Optional[SV] = None
+    eligible_fraction: Optional[SV] = None
     competitors: list[CompetitorEntry] = Field(default_factory=list)
     notes: Optional[str] = None
 

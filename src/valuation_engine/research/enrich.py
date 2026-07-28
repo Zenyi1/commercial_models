@@ -25,6 +25,13 @@ _OVERRIDE_FIELDS = (
     "peak_share",
     "launch_delay_years",
     "market_access_spend_usd",
+    # Epidemiology funnel — now plumbed through TerritoryAssetInputs so a
+    # researched local prevalence/diagnosis/treatment/eligibility figure reaches
+    # the model instead of being dropped.
+    "epi_rate_per_100k",
+    "diagnosis_rate",
+    "treatment_rate",
+    "eligible_fraction",
 )
 
 
