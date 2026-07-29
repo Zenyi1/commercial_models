@@ -232,6 +232,24 @@ _KEY_HINTS = {
 }
 
 
+# Grade confidence from Valyu's own relevance_score (0-1) instead of a hardcoded
+# floor — trust Valyu's relevance as the confidence proxy. Thresholds are tunable.
+# NB: relevance measures how well the passage matches the query, not that the
+# extracted number is correct; that second gap needs an LLM extractor or a human
+# verify pass. So a mis-extraction from a highly-relevant source can still read
+# "high" — the quote is kept on every value precisely so it can be checked.
+_CONF_HIGH_MIN = 0.8
+_CONF_MEDIUM_MIN = 0.6
+
+
+def _confidence_from_relevance(relevance: float) -> str:
+    if relevance >= _CONF_HIGH_MIN:
+        return "high"
+    if relevance >= _CONF_MEDIUM_MIN:
+        return "medium"
+    return "low"
+
+
 def extract_sourced_value(key: str, results: Sequence[ValyuResult]) -> Optional[SourcedValue]:
     """Best-effort sourced value for ``key`` from Valyu results, or ``None``.
 
@@ -259,8 +277,8 @@ def extract_sourced_value(key: str, results: Sequence[ValyuResult]) -> Optional[
                         source=r.url or None,
                         quote=sentence[:400],  # full sentence for human verification
                         publisher=r.source or None,
-                        method="valyu deepsearch (machine-extracted; verify against quote)",
-                        confidence="low",
+                        method=f"valyu search (relevance {r.relevance:.2f}; verify number against quote)",
+                        confidence=_confidence_from_relevance(r.relevance),
                     ),
                 )
     return None
@@ -329,7 +347,9 @@ class ValyuProvider(ResearchProvider):
         extractor: Optional[Extractor] = None,
         max_num_results: int = _DEFAULT_MAX_RESULTS,
     ):
-        self.api_key = api_key or os.getenv("VALYU_API_KEY")
+        # Accept either env name (VALYU_API_KEY is the Valyu convention; VALYU_KEY
+        # is a common shorthand).
+        self.api_key = api_key or os.getenv("VALYU_API_KEY") or os.getenv("VALYU_KEY")
         self.extractor: Extractor = extractor or extract_sourced_value
         self.max_num_results = max_num_results
 

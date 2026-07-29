@@ -11,6 +11,7 @@ from valuation_engine.research.provider import ResearchQuery
 from valuation_engine.research.valyu_provider import (
     ValyuProvider,
     ValyuResult,
+    _confidence_from_relevance,
     build_query,
     extract_sourced_value,
     parse_results,
@@ -45,7 +46,8 @@ def test_extract_probability_reimbursement(payload):
     assert sv.kind == "bernoulli"
     assert sv.provenance.source == "https://www.gov.br/conitec/report-2023-gout"
     assert "45%" in sv.provenance.quote
-    assert sv.provenance.confidence == "low"  # machine-extracted
+    # Graded from Valyu's relevance_score (0.91 -> high), not a hardcoded floor.
+    assert sv.provenance.confidence == "high"
 
 
 def test_extract_reimbursement_lag_years(payload):
@@ -76,6 +78,16 @@ def test_extract_market_access_spend_usd(payload):
     sv = extract_sourced_value("market_access_spend_usd", results)
     assert sv is not None
     assert sv.value == pytest.approx(3_500_000.0)
+    # Pulled from the 0.71-relevance result -> medium (not high, not the old low).
+    assert sv.provenance.confidence == "medium"
+
+
+def test_confidence_graded_from_relevance():
+    assert _confidence_from_relevance(0.95) == "high"
+    assert _confidence_from_relevance(0.80) == "high"
+    assert _confidence_from_relevance(0.70) == "medium"
+    assert _confidence_from_relevance(0.60) == "medium"
+    assert _confidence_from_relevance(0.40) == "low"
 
 
 def test_extract_returns_none_when_absent():
