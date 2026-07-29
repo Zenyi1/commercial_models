@@ -30,6 +30,7 @@ from valuation_engine.inputs.schemas import (
     TerritoryAssetInputs,
 )
 from valuation_engine.report import render_portfolio, render_text, value_territory
+from valuation_engine.research.llm_extractor import make_llm_extractor
 from valuation_engine.research.provider import MultiSourceProvider
 from valuation_engine.research.valyu_provider import ValyuProvider
 
@@ -85,19 +86,28 @@ deal = DealTerms(
 
 
 def build_research_provider():
-    """Valyu when keyed; None otherwise (engine then uses the assumptions)."""
-    valyu = ValyuProvider()
+    """Valyu when keyed; None otherwise (engine then uses the assumptions).
+
+    If ANTHROPIC_API_KEY is also set, Valyu's passages are read by an LLM
+    extractor (accurate on real prose) instead of the regex heuristic.
+    """
+    extractor = None
+    mode = "regex extraction"
+    if os.getenv("ANTHROPIC_API_KEY"):
+        extractor = make_llm_extractor()
+        mode = f"LLM extraction ({os.getenv('ANTHROPIC_MODEL', 'claude-opus-4-8')})"
+    valyu = ValyuProvider(extractor=extractor)
     if not valyu.available():
-        return None
+        return None, "none — using assumptions"
     # Room to add CachedProvider / structured adapters here and cross-validate.
-    return MultiSourceProvider([valyu])
+    return MultiSourceProvider([valyu]), f"Valyu (live) + {mode}"
 
 
 def main() -> None:
     modality = load_modality(asset.modality_id)
     analyzer = ComparablesAnalyzer(load_corpus(default_corpus_path()))
-    research = build_research_provider()
-    print("Research:", "Valyu (live)" if research else "none — using assumptions")
+    research, mode = build_research_provider()
+    print("Research:", mode)
     results = []
     for tid in ["mexico", "brazil", "saudi_arabia"]:
         tv = value_territory(

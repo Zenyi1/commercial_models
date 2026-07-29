@@ -1,4 +1,4 @@
-"""Tests for the Valyu DeepSearch provider — parsing + extraction against a
+"""Tests for the Valyu Search provider — parsing + extraction against a
 saved fixture, and the provider end-to-end with an injected fake client (no
 network), mirroring tests/test_edgar.py."""
 
@@ -120,7 +120,7 @@ def test_provider_unavailable_without_key(monkeypatch):
 
 def test_provider_end_to_end_with_fake_client(payload):
     class _FakeClient:
-        def deepsearch(self, query, **kw):
+        def search(self, query, **kw):
             return payload
 
     prov = ValyuProvider(api_key="test-key")
@@ -131,7 +131,7 @@ def test_provider_end_to_end_with_fake_client(payload):
 
 def test_provider_swallows_backend_errors():
     class _BoomClient:
-        def deepsearch(self, query, **kw):
+        def search(self, query, **kw):
             raise OSError("network down")
 
     prov = ValyuProvider(api_key="test-key")

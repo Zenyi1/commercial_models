@@ -1,10 +1,10 @@
-"""Valyu DeepSearch backend — live retrieval + sourced-value extraction.
+"""Valyu Search backend — live retrieval + sourced-value extraction.
 
 Two layers, kept separate so the parsing/extraction is testable without the
 network (mirrors :mod:`valuation_engine.research.data_sources.edgar`):
 
 * :class:`ValyuClient` — a thin, self-rate-limited ``urllib`` wrapper over the
-  Valyu DeepSearch REST API. No third-party SDK; stdlib only.
+  Valyu Search REST API (POST /v1/search). No third-party SDK; stdlib only.
 * pure functions — :func:`build_query` turns a :class:`ResearchQuery` into a
   natural-language search; :func:`parse_results` turns the JSON payload into
   :class:`ValyuResult`s; :func:`extract_sourced_value` turns those results into a
@@ -47,7 +47,7 @@ from valuation_engine.research.provider import ResearchProvider, ResearchQuery
 # {query, search_type: all|web|proprietary, max_num_results: 1-20,
 #  relevance_threshold: 0-1}; response has a `results` array of objects with
 # title/url/content/source/relevance_score.
-_DEEPSEARCH_URL = "https://api.valyu.ai/v1/search"
+_SEARCH_URL = "https://api.valyu.ai/v1/search"
 _AUTH_HEADER = "x-api-key"
 _DEFAULT_SEARCH_TYPE = "all"          # "all" | "web" | "proprietary"
 _DEFAULT_MAX_RESULTS = 8
@@ -99,7 +99,7 @@ def build_query(q: ResearchQuery) -> str:
 # Response parsing (pure)
 # --------------------------------------------------------------------------- #
 def parse_results(payload: dict) -> list[ValyuResult]:
-    """Parse a Valyu DeepSearch JSON payload into results (no I/O)."""
+    """Parse a Valyu Search JSON payload into results (no I/O)."""
     out: list[ValyuResult] = []
     for r in payload.get("results", []) or []:
         content = r.get("content") or ""
@@ -288,7 +288,7 @@ def extract_sourced_value(key: str, results: Sequence[ValyuResult]) -> Optional[
 # HTTP client (thin, rate-limited, stdlib only)
 # --------------------------------------------------------------------------- #
 class ValyuClient:
-    """Minimal Valyu DeepSearch client. No SDK — stdlib ``urllib`` only."""
+    """Minimal Valyu Search client. No SDK — stdlib ``urllib`` only."""
 
     def __init__(self, api_key: str, min_interval_s: float = 0.2, timeout_s: float = 30.0):
         if not api_key:
@@ -304,7 +304,7 @@ class ValyuClient:
             time.sleep(self.min_interval_s - elapsed)
         self._last_call = time.monotonic()
 
-    def deepsearch(
+    def search(
         self,
         query: str,
         max_num_results: int = _DEFAULT_MAX_RESULTS,
@@ -319,7 +319,7 @@ class ValyuClient:
         }).encode("utf-8")
         self._throttle()
         req = urllib.request.Request(
-            _DEEPSEARCH_URL,
+            _SEARCH_URL,
             data=body,
             method="POST",
             headers={
@@ -367,7 +367,7 @@ class ValyuProvider(ResearchProvider):
 
     def _research(self, query: ResearchQuery) -> Optional[SourcedValue]:
         try:
-            payload = self._make_client().deepsearch(
+            payload = self._make_client().search(
                 build_query(query), max_num_results=self.max_num_results
             )
         except (urllib.error.URLError, TimeoutError, ValueError, OSError):
