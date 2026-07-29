@@ -117,11 +117,13 @@ def _kind_bounds(key: str) -> str:
     return "fraction"
 
 
-def _build_user_prompt(key: str, results: Sequence[ValyuResult]) -> str:
+def _build_user_prompt(
+    key: str, results: Sequence[ValyuResult], max_chars: int = _MAX_CHARS_PER_PASSAGE
+) -> str:
     ask = _KEY_ASK.get(key, key.replace("_", " "))
     lines = [f"Extract {ask}.", "", "SOURCE PASSAGES:"]
     for i, r in enumerate(results[:_MAX_RESULTS_TO_LLM], 1):
-        lines.append(f"\n[{i}] url: {r.url}\n{r.content[:_MAX_CHARS_PER_PASSAGE]}")
+        lines.append(f"\n[{i}] url: {r.url}\n{r.content[:max_chars]}")
     return "\n".join(lines)
 
 
@@ -169,12 +171,14 @@ def make_llm_extractor(
     api_key: Optional[str] = None,
     model: Optional[str] = None,
     client: Optional[AnthropicClient] = None,
+    max_chars: int = _MAX_CHARS_PER_PASSAGE,
 ) -> Extractor:
     """Build an extractor closure with the ``(key, results) -> SourcedValue|None`` shape.
 
     ``client`` is a seam for tests (inject a fake with ``extract_json``). In
     production, pass nothing: the key comes from ``ANTHROPIC_API_KEY`` and the
-    model from ``ANTHROPIC_MODEL`` (default ``claude-opus-4-8``).
+    model from ``ANTHROPIC_MODEL`` (default ``claude-opus-4-8``). ``max_chars``
+    caps per-passage length — raise it for long DeepResearch reports.
     """
     resolved_model = model or os.getenv("ANTHROPIC_MODEL") or _DEFAULT_MODEL
 
@@ -188,7 +192,7 @@ def make_llm_extractor(
             return None
         try:
             data = _make_client().extract_json(
-                _SYSTEM, _build_user_prompt(key, results), _EXTRACTION_SCHEMA
+                _SYSTEM, _build_user_prompt(key, results, max_chars), _EXTRACTION_SCHEMA
             )
         except (urllib.error.URLError, TimeoutError, ValueError, OSError, KeyError):
             # A flaky/unauthorized LLM must not sink the valuation — fall back.

@@ -117,3 +117,33 @@ class MultiSourceProvider(ResearchProvider):
             )
             return best.model_copy(update={"provenance": prov})
         return best
+
+
+class EscalatingProvider(ResearchProvider):
+    """Try providers in order; return the first non-None answer (a fallback ladder).
+
+    Unlike :class:`MultiSourceProvider` (which queries *every* provider and
+    cross-validates), this queries the next provider *only* when the previous one
+    returns None. That makes it the right shape for "escalate to a slower/costlier
+    tier only for the keys the cheap tier couldn't answer" — e.g. fast Valyu search
+    first, Valyu DeepResearch on the residual.
+    """
+
+    def __init__(self, providers: list[ResearchProvider]):
+        self.providers = providers
+        self.name = "escalate(" + ",".join(p.name for p in providers) + ")"
+
+    def available(self) -> bool:
+        return any(p.available() for p in self.providers)
+
+    def get(self, query: ResearchQuery) -> Optional[SourcedValue]:
+        for p in self.providers:
+            if not p.available():
+                continue
+            try:
+                sv = p.get(query)
+            except Exception:  # a flaky tier must not block escalation / other keys
+                sv = None
+            if sv is not None:
+                return sv
+        return None

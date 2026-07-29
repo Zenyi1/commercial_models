@@ -31,7 +31,8 @@ from valuation_engine.inputs.schemas import (
 )
 from valuation_engine.report import render_portfolio, render_text, value_territory
 from valuation_engine.research.llm_extractor import make_llm_extractor
-from valuation_engine.research.provider import MultiSourceProvider
+from valuation_engine.research.provider import EscalatingProvider, MultiSourceProvider
+from valuation_engine.research.valyu_deepresearch import ValyuDeepResearchProvider
 from valuation_engine.research.valyu_provider import ValyuProvider
 
 
@@ -99,6 +100,13 @@ def build_research_provider():
     valyu = ValyuProvider(extractor=extractor)
     if not valyu.available():
         return None, "none — using assumptions"
+    # ENRICH_ESCALATE=1 adds a DeepResearch fallback for keys fast search can't
+    # answer (slower/costlier — fires only on the residual None keys).
+    if os.getenv("ENRICH_ESCALATE") == "1":
+        provider = MultiSourceProvider(
+            [EscalatingProvider([valyu, ValyuDeepResearchProvider(extractor=extractor)])]
+        )
+        return provider, f"Valyu (live) + {mode} + DeepResearch fallback"
     # Room to add CachedProvider / structured adapters here and cross-validate.
     return MultiSourceProvider([valyu]), f"Valyu (live) + {mode}"
 
