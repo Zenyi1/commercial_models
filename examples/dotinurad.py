@@ -30,6 +30,7 @@ from valuation_engine.inputs.schemas import (
     TerritoryAssetInputs,
 )
 from valuation_engine.report import render_portfolio, render_text, value_territory
+from valuation_engine.research.cache import CachingProvider, ResearchCache
 from valuation_engine.research.llm_extractor import make_llm_extractor
 from valuation_engine.research.provider import EscalatingProvider, MultiSourceProvider
 from valuation_engine.research.valyu_deepresearch import ValyuDeepResearchProvider
@@ -100,15 +101,19 @@ def build_research_provider():
     valyu = ValyuProvider(extractor=extractor)
     if not valyu.available():
         return None, "none — using assumptions"
+    # A persistent cache/journal so paid research is paid for at most once per
+    # question, and in-flight DeepResearch tasks are resumed, never orphaned.
+    cache = ResearchCache(os.getenv("RESEARCH_CACHE_PATH", "data/research_cache.json"))
+    refresh = os.getenv("RESEARCH_REFRESH") == "1"  # force re-fetch (still writes)
+
     # ENRICH_ESCALATE=1 adds a DeepResearch fallback for keys fast search can't
-    # answer (slower/costlier — fires only on the residual None keys).
+    # answer (slower/costlier — fires only on the residual None keys). Both tiers
+    # are cache-backed, so a rerun collects prior results for free.
     if os.getenv("ENRICH_ESCALATE") == "1":
-        provider = MultiSourceProvider(
-            [EscalatingProvider([valyu, ValyuDeepResearchProvider(extractor=extractor)])]
-        )
-        return provider, f"Valyu (live) + {mode} + DeepResearch fallback"
-    # Room to add CachedProvider / structured adapters here and cross-validate.
-    return MultiSourceProvider([valyu]), f"Valyu (live) + {mode}"
+        deep = ValyuDeepResearchProvider(extractor=extractor, cache=cache, refresh=refresh)
+        ladder = EscalatingProvider([CachingProvider(valyu, cache, refresh), deep])
+        return MultiSourceProvider([ladder]), f"Valyu (live) + {mode} + DeepResearch fallback [cached]"
+    return MultiSourceProvider([CachingProvider(valyu, cache, refresh)]), f"Valyu (live) + {mode} [cached]"
 
 
 def main() -> None:

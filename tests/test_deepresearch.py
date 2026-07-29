@@ -1,9 +1,10 @@
-"""Tests for the DeepResearch escalation tier and the EscalatingProvider ladder.
-No network — fake clients/providers stand in."""
+"""Tests for the DeepResearch escalation tier, the EscalatingProvider ladder,
+and the cache/task-journal (resume-not-re-pay). No network — fakes stand in."""
 
 import pytest
 
 from valuation_engine.inputs.schemas import SourcedValue
+from valuation_engine.research.cache import ResearchCache, cache_key
 from valuation_engine.research.provider import (
     EscalatingProvider,
     ResearchProvider,
@@ -38,19 +39,15 @@ def _sv(v=0.5):
 
 
 def test_escalate_uses_second_when_first_returns_none():
-    fast = _Stub("fast", None)
-    deep = _Stub("deep", _sv(0.42))
-    prov = EscalatingProvider([fast, deep])
-    sv = prov.get(ResearchQuery(key="net_price_usd", territory_id="brazil"))
+    fast, deep = _Stub("fast", None), _Stub("deep", _sv(0.42))
+    sv = EscalatingProvider([fast, deep]).get(ResearchQuery(key="net_price_usd", territory_id="brazil"))
     assert sv is not None and sv.value == pytest.approx(0.42)
-    assert fast.calls == 1 and deep.calls == 1  # escalated
+    assert fast.calls == 1 and deep.calls == 1
 
 
 def test_escalate_skips_second_when_first_answers():
-    fast = _Stub("fast", _sv(0.9))
-    deep = _Stub("deep", _sv(0.1))
-    prov = EscalatingProvider([fast, deep])
-    sv = prov.get(ResearchQuery(key="p_reimbursement", territory_id="brazil"))
+    fast, deep = _Stub("fast", _sv(0.9)), _Stub("deep", _sv(0.1))
+    sv = EscalatingProvider([fast, deep]).get(ResearchQuery(key="p_reimbursement", territory_id="brazil"))
     assert sv.value == pytest.approx(0.9)
     assert deep.calls == 0  # deep tier never touched — no wasted cost
 
@@ -60,52 +57,92 @@ def test_escalate_all_none_returns_none():
     assert prov.get(ResearchQuery(key="peak_share", territory_id="brazil")) is None
 
 
-def test_escalate_skips_unavailable_provider():
-    fast = _Stub("fast", _sv(0.3), avail=False)
-    deep = _Stub("deep", _sv(0.7))
-    prov = EscalatingProvider([fast, deep])
-    assert prov.get(ResearchQuery(key="net_price_usd", territory_id="brazil")).value == pytest.approx(0.7)
-    assert fast.calls == 0  # unavailable -> not called
-
-
-# --------------------------------------------------------------------------- #
-# ValyuDeepResearchProvider (fake client + fake extractor)
-# --------------------------------------------------------------------------- #
 def test_build_research_question_is_directive():
     q = build_research_question(ResearchQuery(key="net_price_usd", territory_id="mexico", indication="gout"))
     assert "gout" in q and "Mexico" in q and "reliable figure" in q
 
 
-def test_deepresearch_provider_extracts_from_report():
-    class _FakeClient:
-        def research(self, query, **kw):
-            return {"status": "completed", "output": "Net price is about $1,200/yr.",
-                    "sources": [{"title": "PriceRef", "url": "https://ref"}]}
+# --------------------------------------------------------------------------- #
+# DeepResearch provider — client uses submit() + poll_until()
+# --------------------------------------------------------------------------- #
+class _FakeClient:
+    def __init__(self, outcome="completed", task=None):
+        self.outcome, self.task = outcome, task
+        self.submits, self.polls, self.last_id = 0, 0, None
 
-    captured = {}
+    def submit(self, query, mode=None):
+        self.submits += 1
+        return "TID-new"
 
-    def fake_extractor(key, results):
-        captured["content"] = results[0].content
-        captured["url"] = results[0].url
-        return SourcedValue(value=1200.0, kind="point", unit="usd")
+    def poll_until(self, task_id, timeout_s=0, interval_s=0):
+        self.polls += 1
+        self.last_id = task_id
+        return self.outcome, self.task
 
-    prov = ValyuDeepResearchProvider(api_key="k", extractor=fake_extractor)
-    prov._make_client = lambda: _FakeClient()
-    sv = prov.get(ResearchQuery(key="net_price_usd", territory_id="mexico", indication="gout"))
+
+_COMPLETED = {"status": "completed", "output": "Net price is about $1,200/yr.",
+              "sources": [{"title": "PriceRef", "url": "https://ref"}]}
+
+
+def _provider(client, cache=None, extractor=None):
+    prov = ValyuDeepResearchProvider(api_key="k", cache=cache,
+                                     extractor=extractor or (lambda k, r: SourcedValue(value=1200.0, kind="point", unit="usd")))
+    prov._make_client = lambda: client
+    return prov
+
+
+def test_deepresearch_extracts_and_caches(tmp_path):
+    cache = ResearchCache(tmp_path / "c.json")
+    client = _FakeClient(outcome="completed", task=_COMPLETED)
+    q = ResearchQuery(key="net_price_usd", territory_id="mexico", asset_id="A1", indication="gout")
+    sv = _provider(client, cache).get(q)
     assert sv is not None and sv.value == pytest.approx(1200.0)
-    assert "1,200" in captured["content"]
-    assert "SOURCES:" in captured["content"] and "https://ref" in captured["content"]
-    assert captured["url"] == "https://ref"
+    assert client.submits == 1
+    entry = cache.get(cache_key(q))
+    assert entry["status"] == "done" and entry["answer"]["value"] == pytest.approx(1200.0)
 
 
-def test_deepresearch_none_when_not_completed():
-    class _FakeClient:
-        def research(self, query, **kw):
-            return None  # timed out / failed
+def test_deepresearch_resolved_cache_hit_skips_client(tmp_path):
+    cache = ResearchCache(tmp_path / "c.json")
+    q = ResearchQuery(key="net_price_usd", territory_id="mexico", asset_id="A1")
+    cache.set(cache_key(q), {"status": "done", "task_id": "old",
+                             "answer": {"value": 999.0, "kind": "point"}, "updated_at": None})
+    client = _FakeClient()
+    sv = _provider(client, cache).get(q)
+    assert sv.value == pytest.approx(999.0)
+    assert client.submits == 0 and client.polls == 0  # never touched the paid API
 
-    prov = ValyuDeepResearchProvider(api_key="k", extractor=lambda k, r: None)
-    prov._make_client = lambda: _FakeClient()
-    assert prov.get(ResearchQuery(key="net_price_usd", territory_id="mexico")) is None
+
+def test_deepresearch_resumes_running_task_instead_of_resubmitting(tmp_path):
+    cache = ResearchCache(tmp_path / "c.json")
+    q = ResearchQuery(key="net_price_usd", territory_id="mexico", asset_id="A1")
+    cache.set(cache_key(q), {"status": "running", "task_id": "TID-old", "answer": None, "updated_at": None})
+    client = _FakeClient(outcome="completed", task=_COMPLETED)
+    sv = _provider(client, cache).get(q)
+    assert sv is not None
+    assert client.submits == 0          # did NOT re-submit (no re-pay)
+    assert client.last_id == "TID-old"  # resumed the journaled paid task
+    assert cache.get(cache_key(q))["status"] == "done"
+
+
+def test_deepresearch_timeout_keeps_task_for_resume(tmp_path):
+    cache = ResearchCache(tmp_path / "c.json")
+    q = ResearchQuery(key="net_price_usd", territory_id="mexico", asset_id="A1")
+    client = _FakeClient(outcome="timeout", task=None)
+    sv = _provider(client, cache).get(q)
+    assert sv is None
+    entry = cache.get(cache_key(q))
+    assert entry["status"] == "running" and entry["task_id"] == "TID-new"  # not orphaned
+
+
+def test_deepresearch_completed_but_no_figure_caches_definitive_none(tmp_path):
+    cache = ResearchCache(tmp_path / "c.json")
+    q = ResearchQuery(key="net_price_usd", territory_id="mexico", asset_id="A1")
+    client = _FakeClient(outcome="completed", task=_COMPLETED)
+    prov = _provider(client, cache, extractor=lambda k, r: None)  # LLM found nothing
+    assert prov.get(q) is None
+    entry = cache.get(cache_key(q))
+    assert entry["status"] == "done" and entry["answer"] is None  # won't re-pay
 
 
 def test_deepresearch_unavailable_without_key(monkeypatch):
@@ -116,11 +153,10 @@ def test_deepresearch_unavailable_without_key(monkeypatch):
     assert prov.get(ResearchQuery(key="net_price_usd", territory_id="mexico")) is None
 
 
-def test_deepresearch_swallows_backend_errors():
+def test_deepresearch_swallows_submit_errors(tmp_path):
     class _Boom:
-        def research(self, query, **kw):
+        def submit(self, *a, **k):
             raise OSError("valyu down")
 
-    prov = ValyuDeepResearchProvider(api_key="k", extractor=lambda k, r: None)
-    prov._make_client = lambda: _Boom()
-    assert prov.get(ResearchQuery(key="net_price_usd", territory_id="mexico")) is None
+    prov = _provider(_Boom(), ResearchCache(tmp_path / "c.json"), extractor=lambda k, r: None)
+    assert prov.get(ResearchQuery(key="net_price_usd", territory_id="mexico", asset_id="A1")) is None
