@@ -40,10 +40,13 @@ _TASKS_URL = "https://api.valyu.ai/v1/deepresearch/tasks"
 _AUTH_HEADER = "x-api-key"
 _DEFAULT_MODE = os.getenv("VALYU_DEEPRESEARCH_MODE", "fast")  # fast|standard|heavy|max
 _POLL_INTERVAL_S = 8.0
-_POLL_TIMEOUT_S = float(os.getenv("VALYU_DEEPRESEARCH_TIMEOUT_S", "300"))
+# A single fast task takes ~200s to complete; under concurrent load it's longer,
+# and `output`/`sources` only appear on /status once status == "completed". Give
+# it real headroom so tasks aren't abandoned mid-flight (override if needed).
+_POLL_TIMEOUT_S = float(os.getenv("VALYU_DEEPRESEARCH_TIMEOUT_S", "600"))
 _TERMINAL_OK = "completed"
 _TERMINAL_FAIL = {"failed", "cancelled"}
-_MAX_REPORT_CHARS = 6000  # deep reports are long; give the extractor room
+_MAX_REPORT_CHARS = 24000  # reports run ~30k chars; send most of it to the extractor
 
 
 def build_research_question(q: ResearchQuery) -> str:
