@@ -1,0 +1,112 @@
+{
+  "DOTINURAD-001|brazil|diagnosis_rate": {
+    "answer": null,
+    "status": "done",
+    "task_id": null,
+    "updated_at": null
+  },
+  "DOTINURAD-001|brazil|eligible_fraction": {
+    "answer": null,
+    "status": "done",
+    "task_id": null,
+    "updated_at": null
+  },
+  "DOTINURAD-001|brazil|epi_rate_per_100k": {
+    "answer": {
+      "high": 822.3,
+      "kind": "pert",
+      "low": 525.4,
+      "provenance": {
+        "as_of": null,
+        "confidence": "high",
+        "method": "anthropic claude-haiku-4-5 extraction (grounded in valyu passages)",
+        "notes": null,
+        "publisher": null,
+        "quote": "In 2020, 55\u00b78 million (95% uncertainty interval 44\u00b74\u201369\u00b78) people globally had gout, with an age-standardised prevalence of 659\u00b73 (525\u00b74\u2013822\u00b73) per 100 000",
+        "source": "https://www.healthdata.org/research-analysis/library/global-regional-and-national-burden-gout-1990-2020-and-projections-2050"
+      },
+      "spread": null,
+      "unit": "per_100k",
+      "value": 659.3
+    },
+    "status": "done",
+    "task_id": null,
+    "updated_at": null
+  },
+  "DOTINURAD-001|brazil|launch_delay_years": {
+    "answer": null,
+    "status": "done",
+    "task_id": null,
+    "updated_at": null
+  },
+  "DOTINURAD-001|brazil|market_access_spend_usd": {
+    "answer": null,
+    "status": "done",
+    "task_id": null,
+    "updated_at": null
+  },
+  "DOTINURAD-001|brazil|net_price_usd": {
+    "answer": null,
+    "status": "done",
+    "task_id": null,
+    "updated_at": null
+  },
+  "DOTINURAD-001|brazil|p_reimbursement": {
+    "answer": null,
+    "status": "done",
+    "task_id": null,
+    "updated_at": null
+  },
+  "DOTINURAD-001|brazil|p_territory_approval": {
+    "answer": null,
+    "status": "done",
+    "task_id": null,
+    "updated_at": null
+  },
+  "DOTINURAD-001|brazil|peak_share": {
+    "answer": null,
+    "status": "done",
+    "task_id": null,
+    "updated_at": null
+  },
+  "DOTINURAD-001|brazil|reference_price_factor": {
+    "answer": null,
+    "status": "done",
+    "task_id": null,
+    "updated_at": null
+  },
+  "DOTINURAD-001|brazil|regulatory_review_years": {
+    "answer": null,
+    "status": "done",
+    "task_id": null,
+    "updated_at": null
+  },
+  "DOTINURAD-001|brazil|reimbursement_lag_years": {
+    "answer": null,
+    "status": "done",
+    "task_id": null,
+    "updated_at": null
+  },
+  "DOTINURAD-001|brazil|treatment_rate": {
+    "answer": {
+      "high": null,
+      "kind": "point",
+      "low": null,
+      "provenance": {
+        "as_of": null,
+        "confidence": "high",
+        "method": "anthropic claude-haiku-4-5 extraction (grounded in valyu passages)",
+        "notes": null,
+        "publisher": null,
+        "quote": "Despite gout being a widespread chronic disease in Taiwan, only one-third of people with gout are receiving medical management, and only one-fifth are receiving ULT, suggesting that it is managed poorly.",
+        "source": "https://pubmed.ncbi.nlm.nih.gov/PMC7407011"
+      },
+      "spread": null,
+      "unit": "fraction",
+      "value": 0.333
+    },
+    "status": "done",
+    "task_id": null,
+    "updated_at": null
+  }
+}

@@ -52,18 +52,6 @@ _TERMINAL_FAIL = {"failed", "cancelled"}
 _MAX_REPORT_CHARS = 24000  # reports run ~30k chars; send most of it to the extractor
 
 
-def build_research_question(q: ResearchQuery) -> str:
-    """A directive research question for one canonical key × asset × territory."""
-    terr = _TERRITORY_NAMES.get(q.territory_id, q.territory_id.replace("_", " "))
-    ind = q.indication or "the drug"
-    ask = _KEY_ASK.get(q.key, q.key.replace("_", " "))
-    return (
-        f"For {ind} in {terr}: find {ask}. Report the single most defensible numeric "
-        f"value with the exact figure, the unit, and the sources it comes from. If no "
-        f"reliable figure exists, say so explicitly rather than estimating."
-    )
-
-
 def build_combined_question(query: ResearchQuery, keys: Sequence[str]) -> str:
     """One research question covering every residual key for an asset × territory."""
     terr = _TERRITORY_NAMES.get(query.territory_id, query.territory_id.replace("_", " "))
@@ -138,91 +126,6 @@ class ValyuDeepResearchClient:
                 return "failed", None
             time.sleep(interval_s)
         return "timeout", None
-
-
-class ValyuDeepResearchProvider(ResearchProvider):
-    name = "valyu_deepresearch"
-
-    def __init__(
-        self,
-        api_key: Optional[str] = None,
-        extractor=None,
-        mode: str = _DEFAULT_MODE,
-        cache: Optional[ResearchCache] = None,
-        refresh: bool = False,
-        timeout_s: float = _POLL_TIMEOUT_S,
-        interval_s: float = _POLL_INTERVAL_S,
-        namespace: str = "deep",
-    ):
-        self.api_key = api_key or os.getenv("VALYU_API_KEY") or os.getenv("VALYU_KEY")
-        # Reuse the same grounded LLM extractor; wider char budget for long reports.
-        self.extractor = extractor or make_llm_extractor(max_chars=_MAX_REPORT_CHARS)
-        self.mode = mode
-        self.cache = cache  # doubles as the task journal (task_id + status)
-        self.refresh = refresh
-        self.timeout_s = timeout_s
-        self.interval_s = interval_s
-        # Distinct from the fast tier's namespace so a fast-tier cached None does
-        # not occupy this key and short-circuit DeepResearch.
-        self.namespace = namespace
-
-    def available(self) -> bool:
-        return bool(self.api_key)
-
-    def _make_client(self) -> ValyuDeepResearchClient:
-        return ValyuDeepResearchClient(self.api_key or "")
-
-    def _journal(self, key: str, status: str, task_id: Optional[str],
-                 answer: Optional[dict]) -> None:
-        if self.cache is not None:
-            self.cache.set(key, {"status": status, "task_id": task_id,
-                                 "answer": answer, "updated_at": None})
-
-    def _extract(self, key: str, task: dict) -> Optional[SourcedValue]:
-        output = task.get("output") or ""
-        if not output:
-            return None
-        sources = task.get("sources") or []
-        src_lines = "\n".join(f"- {s.get('title', '')}: {s.get('url', '')}" for s in sources)
-        content = output + ("\n\nSOURCES:\n" + src_lines if src_lines else "")
-        result = ValyuResult(
-            title="Valyu DeepResearch",
-            url=(sources[0].get("url", "") if sources else ""),
-            content=content, source="valyu deepresearch", relevance=0.9,
-        )
-        return self.extractor(key, [result])
-
-    def get(self, query: ResearchQuery) -> Optional[SourcedValue]:
-        if not self.available():
-            return None
-        k = cache_key(query, self.namespace)
-        entry = self.cache.get(k) if self.cache is not None else None
-
-        # Resolved before -> return it (value or definitive None). No re-pay.
-        if not self.refresh and entry is not None and entry.get("status") == "done":
-            return ResearchCache.decode_answer(entry.get("answer"))
-
-        client = self._make_client()
-        # Resume a journaled, still-running paid task instead of submitting anew.
-        task_id = entry.get("task_id") if (entry and entry.get("status") == "running") else None
-        try:
-            if task_id is None:
-                task_id = client.submit(build_research_question(query), mode=self.mode)
-                self._journal(k, "running", task_id, None)
-            outcome, task = client.poll_until(task_id, self.timeout_s, self.interval_s)
-        except (urllib.error.URLError, TimeoutError, ValueError, OSError, KeyError):
-            return None
-
-        if outcome == "timeout":
-            self._journal(k, "running", task_id, None)  # keep id; resume next run
-            return None
-        if outcome != "completed" or not task:
-            self._journal(k, "failed", task_id, None)
-            return None
-
-        sv = self._extract(query.key, task)
-        self._journal(k, "done", task_id, ResearchCache.encode_answer(sv))
-        return sv
 
 
 class BatchDeepResearchProvider(ResearchProvider):
