@@ -67,7 +67,9 @@ _KEY_ASK = {
     "p_reimbursement": "the probability (0-1) the drug is reimbursed on the public formulary",
     "reimbursement_lag_years": "the time in YEARS from approval to public reimbursement listing",
     "regulatory_review_years": "the regulatory review time in YEARS",
-    "net_price_usd": "the annual net price per patient in USD",
+    "net_price_usd": ("a representative annual net price per patient in USD for a branded drug "
+                      "in this class in this market, anchored to the prices of the comparable "
+                      "in-market drugs the passages report (name the comparator you anchored to)"),
     "reference_price_factor": "the local net price as a fraction (0-1) of the US/global reference price",
     "peak_share": "the peak market share (0-1) of the branded drug",
     "launch_delay_years": "the launch delay in YEARS beyond regulatory approval",

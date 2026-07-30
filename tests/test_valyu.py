@@ -138,3 +138,12 @@ def test_provider_swallows_backend_errors():
     prov._make_client = lambda: _BoomClient()
     # Must degrade to None, never raise, so the aggregator can fall back.
     assert prov.get(ResearchQuery(key="p_reimbursement", territory_id="brazil")) is None
+
+
+def test_price_query_is_market_and_comparables_aware():
+    # Price research must pull in-market comparables for the territory being run,
+    # not ask for one drug's confidential net price.
+    for terr, name in (("brazil", "Brazil"), ("mexico", "Mexico")):
+        q = build_query(ResearchQuery(key="net_price_usd", territory_id=terr, indication="gout"))
+        assert name in q and "gout" in q
+        assert "comparator" in q or "generic" in q  # comparables-driven

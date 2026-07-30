@@ -86,8 +86,13 @@ def build_query(q: ResearchQuery) -> str:
         "p_reimbursement": f"probability a branded {ind} drug is reimbursed on the public formulary in {terr}",
         "reimbursement_lag_years": f"time in years from drug approval to public reimbursement listing in {terr}",
         "regulatory_review_years": f"average drug regulatory review time in years in {terr}",
-        "net_price_usd": f"annual net price in USD of a branded {ind} drug in {terr}",
-        "reference_price_factor": f"drug prices in {terr} as a fraction of US or global reference price",
+        "net_price_usd": (
+            f"current prices of drugs used to treat {ind} in {terr} — both generic "
+            f"(e.g. allopurinol) and branded comparators — per month or per year, "
+            f"to anchor a branded annual net price"),
+        "reference_price_factor": (
+            f"how {terr} drug prices for {ind} compare to US/global reference prices "
+            f"(local price as a fraction of the US price)"),
         "peak_share": f"peak market share of a branded {ind} drug in {terr}",
         "launch_delay_years": f"typical launch delay in years for new drugs in {terr}",
         "market_access_spend_usd": f"pharmaceutical product launch and market-access spend in USD in {terr}",
