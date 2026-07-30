@@ -98,14 +98,14 @@ def test_deepresearch_extracts_and_caches(tmp_path):
     sv = _provider(client, cache).get(q)
     assert sv is not None and sv.value == pytest.approx(1200.0)
     assert client.submits == 1
-    entry = cache.get(cache_key(q))
+    entry = cache.get(cache_key(q, "deep"))
     assert entry["status"] == "done" and entry["answer"]["value"] == pytest.approx(1200.0)
 
 
 def test_deepresearch_resolved_cache_hit_skips_client(tmp_path):
     cache = ResearchCache(tmp_path / "c.json")
     q = ResearchQuery(key="net_price_usd", territory_id="mexico", asset_id="A1")
-    cache.set(cache_key(q), {"status": "done", "task_id": "old",
+    cache.set(cache_key(q, "deep"), {"status": "done", "task_id": "old",
                              "answer": {"value": 999.0, "kind": "point"}, "updated_at": None})
     client = _FakeClient()
     sv = _provider(client, cache).get(q)
@@ -116,13 +116,13 @@ def test_deepresearch_resolved_cache_hit_skips_client(tmp_path):
 def test_deepresearch_resumes_running_task_instead_of_resubmitting(tmp_path):
     cache = ResearchCache(tmp_path / "c.json")
     q = ResearchQuery(key="net_price_usd", territory_id="mexico", asset_id="A1")
-    cache.set(cache_key(q), {"status": "running", "task_id": "TID-old", "answer": None, "updated_at": None})
+    cache.set(cache_key(q, "deep"), {"status": "running", "task_id": "TID-old", "answer": None, "updated_at": None})
     client = _FakeClient(outcome="completed", task=_COMPLETED)
     sv = _provider(client, cache).get(q)
     assert sv is not None
     assert client.submits == 0          # did NOT re-submit (no re-pay)
     assert client.last_id == "TID-old"  # resumed the journaled paid task
-    assert cache.get(cache_key(q))["status"] == "done"
+    assert cache.get(cache_key(q, "deep"))["status"] == "done"
 
 
 def test_deepresearch_timeout_keeps_task_for_resume(tmp_path):
@@ -131,7 +131,7 @@ def test_deepresearch_timeout_keeps_task_for_resume(tmp_path):
     client = _FakeClient(outcome="timeout", task=None)
     sv = _provider(client, cache).get(q)
     assert sv is None
-    entry = cache.get(cache_key(q))
+    entry = cache.get(cache_key(q, "deep"))
     assert entry["status"] == "running" and entry["task_id"] == "TID-new"  # not orphaned
 
 
@@ -141,7 +141,7 @@ def test_deepresearch_completed_but_no_figure_caches_definitive_none(tmp_path):
     client = _FakeClient(outcome="completed", task=_COMPLETED)
     prov = _provider(client, cache, extractor=lambda k, r: None)  # LLM found nothing
     assert prov.get(q) is None
-    entry = cache.get(cache_key(q))
+    entry = cache.get(cache_key(q, "deep"))
     assert entry["status"] == "done" and entry["answer"] is None  # won't re-pay
 
 

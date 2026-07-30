@@ -128,6 +128,7 @@ class ValyuDeepResearchProvider(ResearchProvider):
         refresh: bool = False,
         timeout_s: float = _POLL_TIMEOUT_S,
         interval_s: float = _POLL_INTERVAL_S,
+        namespace: str = "deep",
     ):
         self.api_key = api_key or os.getenv("VALYU_API_KEY") or os.getenv("VALYU_KEY")
         # Reuse the same grounded LLM extractor; wider char budget for long reports.
@@ -137,6 +138,9 @@ class ValyuDeepResearchProvider(ResearchProvider):
         self.refresh = refresh
         self.timeout_s = timeout_s
         self.interval_s = interval_s
+        # Distinct from the fast tier's namespace so a fast-tier cached None does
+        # not occupy this key and short-circuit DeepResearch.
+        self.namespace = namespace
 
     def available(self) -> bool:
         return bool(self.api_key)
@@ -167,7 +171,7 @@ class ValyuDeepResearchProvider(ResearchProvider):
     def get(self, query: ResearchQuery) -> Optional[SourcedValue]:
         if not self.available():
             return None
-        k = cache_key(query)
+        k = cache_key(query, self.namespace)
         entry = self.cache.get(k) if self.cache is not None else None
 
         # Resolved before -> return it (value or definitive None). No re-pay.

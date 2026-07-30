@@ -63,3 +63,13 @@ def test_cache_persists_across_instances(tmp_path):
     inner2 = _Counting(SourcedValue(value=99.0, kind="point"))
     sv = CachingProvider(inner2, ResearchCache(path)).get(_q())
     assert sv.value == 7.0 and inner2.calls == 0
+
+
+def test_namespaces_prevent_tier_collision(tmp_path):
+    """A fast-tier cached None (search ns) must not occupy the deep tier's key,
+    or DeepResearch would be short-circuited and never run on the residual."""
+    cache = ResearchCache(tmp_path / "c.json")
+    fast = CachingProvider(_Counting(None), cache, namespace="search")
+    assert fast.get(_q()) is None
+    assert cache.get(cache_key(_q(), "search")) is not None   # fast None cached here
+    assert cache.get(cache_key(_q(), "deep")) is None          # deep slot still empty

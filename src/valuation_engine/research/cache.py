@@ -32,8 +32,12 @@ from valuation_engine.inputs.schemas import SourcedValue
 from valuation_engine.research.provider import ResearchProvider, ResearchQuery
 
 
-def cache_key(q: ResearchQuery) -> str:
-    return f"{q.asset_id or '-'}|{q.territory_id}|{q.key}"
+def cache_key(q: ResearchQuery, namespace: str = "") -> str:
+    """Cache key for a query. ``namespace`` separates tiers (e.g. fast search vs
+    DeepResearch) so one tier's cached answer — especially a cached None — never
+    collides with, or short-circuits, another tier sharing the same file."""
+    base = f"{q.asset_id or '-'}|{q.territory_id}|{q.key}"
+    return f"{namespace}|{base}" if namespace else base
 
 
 class ResearchCache:
@@ -80,17 +84,19 @@ class CachingProvider(ResearchProvider):
     fresh call (still writes the result back).
     """
 
-    def __init__(self, inner: ResearchProvider, cache: ResearchCache, refresh: bool = False):
+    def __init__(self, inner: ResearchProvider, cache: ResearchCache,
+                 refresh: bool = False, namespace: str = "search"):
         self.inner = inner
         self.cache = cache
         self.refresh = refresh
+        self.namespace = namespace
         self.name = f"cached({inner.name})"
 
     def available(self) -> bool:
         return self.inner.available()
 
     def get(self, query: ResearchQuery) -> Optional[SourcedValue]:
-        k = cache_key(query)
+        k = cache_key(query, self.namespace)
         if not self.refresh:
             entry = self.cache.get(k)
             if entry is not None and entry.get("status") == "done":
