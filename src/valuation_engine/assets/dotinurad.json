@@ -7,20 +7,20 @@
   "epidemiology": {
     "basis": "prevalence",
     "rate_per_100k": {
-      "value": 2000.0,
-      "low": 1200.0,
-      "high": 3500.0,
+      "value": 659.3,
+      "low": 525.4,
+      "high": 822.3,
       "kind": "pert",
       "spread": null,
       "unit": null,
       "provenance": {
-        "source": null,
+        "source": "https://www.healthdata.org/research-analysis/library/global-regional-and-national-burden-gout-1990-2020-and-projections-2050",
         "quote": null,
         "publisher": null,
         "as_of": null,
-        "method": null,
-        "confidence": "assumption",
-        "notes": "Claude assumption"
+        "method": "IHME Global Burden of Disease gout prevalence (global estimate; refine per territory)",
+        "confidence": "medium",
+        "notes": null
       }
     },
     "diagnosis_rate": {
@@ -41,37 +41,37 @@
       }
     },
     "treatment_rate": {
-      "value": 0.4,
+      "value": 0.333,
       "low": 0.25,
-      "high": 0.55,
+      "high": 0.45,
       "kind": "pert",
       "spread": null,
       "unit": null,
       "provenance": {
-        "source": null,
+        "source": "https://pubmed.ncbi.nlm.nih.gov/PMC7407011",
         "quote": null,
         "publisher": null,
         "as_of": null,
-        "method": null,
-        "confidence": "assumption",
-        "notes": "Claude assumption"
+        "method": "share of diagnosed gout patients on urate-lowering therapy",
+        "confidence": "medium",
+        "notes": null
       }
     },
     "eligible_fraction": {
-      "value": 0.15,
-      "low": 0.08,
-      "high": 0.25,
+      "value": 0.5,
+      "low": 0.3,
+      "high": 0.65,
       "kind": "pert",
       "spread": null,
       "unit": null,
       "provenance": {
-        "source": null,
+        "source": "https://www.ncbi.nlm.nih.gov/books/NBK589580/",
         "quote": null,
         "publisher": null,
         "as_of": null,
-        "method": null,
-        "confidence": "assumption",
-        "notes": "Claude assumption"
+        "method": "~2/3 inadequately controlled on first-line ULT (NICE); mainstream SURI positioning, not niche-refractory",
+        "confidence": "low",
+        "notes": null
       }
     }
   },
