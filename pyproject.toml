@@ -13,6 +13,9 @@ dependencies = [
 [project.optional-dependencies]
 dev = ["pytest>=7.4"]
 
+[project.scripts]
+value-asset = "valuation_engine.run:main"
+
 [build-system]
 requires = ["setuptools>=68"]
 build-backend = "setuptools.build_meta"
@@ -21,7 +24,7 @@ build-backend = "setuptools.build_meta"
 where = ["src"]
 
 [tool.setuptools.package-data]
-valuation_engine = ["territories/*.json", "modalities/*.json"]
+valuation_engine = ["territories/*.json", "modalities/*.json", "assets/*.json", "deals/*.json"]
 
 [tool.pytest.ini_options]
 pythonpath = ["src"]

@@ -1,0 +1,352 @@
+{
+  "id": "DOTINURAD-001",
+  "name": "Dotinurad (SURI)",
+  "modality_id": "small_molecule",
+  "indication": "gout",
+  "phase": "approved",
+  "epidemiology": {
+    "basis": "prevalence",
+    "rate_per_100k": {
+      "value": 2000.0,
+      "low": 1200.0,
+      "high": 3500.0,
+      "kind": "pert",
+      "spread": null,
+      "unit": null,
+      "provenance": {
+        "source": null,
+        "quote": null,
+        "publisher": null,
+        "as_of": null,
+        "method": null,
+        "confidence": "assumption",
+        "notes": "Claude assumption"
+      }
+    },
+    "diagnosis_rate": {
+      "value": 0.5,
+      "low": 0.35,
+      "high": 0.65,
+      "kind": "pert",
+      "spread": null,
+      "unit": null,
+      "provenance": {
+        "source": null,
+        "quote": null,
+        "publisher": null,
+        "as_of": null,
+        "method": null,
+        "confidence": "assumption",
+        "notes": "Claude assumption"
+      }
+    },
+    "treatment_rate": {
+      "value": 0.4,
+      "low": 0.25,
+      "high": 0.55,
+      "kind": "pert",
+      "spread": null,
+      "unit": null,
+      "provenance": {
+        "source": null,
+        "quote": null,
+        "publisher": null,
+        "as_of": null,
+        "method": null,
+        "confidence": "assumption",
+        "notes": "Claude assumption"
+      }
+    },
+    "eligible_fraction": {
+      "value": 0.15,
+      "low": 0.08,
+      "high": 0.25,
+      "kind": "pert",
+      "spread": null,
+      "unit": null,
+      "provenance": {
+        "source": null,
+        "quote": null,
+        "publisher": null,
+        "as_of": null,
+        "method": null,
+        "confidence": "assumption",
+        "notes": "Claude assumption"
+      }
+    }
+  },
+  "global_list_price_usd": {
+    "value": 500.0,
+    "low": 300.0,
+    "high": 900.0,
+    "kind": "pert",
+    "spread": null,
+    "unit": null,
+    "provenance": {
+      "source": null,
+      "quote": null,
+      "publisher": null,
+      "as_of": null,
+      "method": null,
+      "confidence": "assumption",
+      "notes": "Claude assumption"
+    }
+  },
+  "exclusivity_years": {
+    "value": 8.0,
+    "low": 6.0,
+    "high": 10.0,
+    "kind": "pert",
+    "spread": null,
+    "unit": null,
+    "provenance": {
+      "source": null,
+      "quote": null,
+      "publisher": null,
+      "as_of": null,
+      "method": null,
+      "confidence": "assumption",
+      "notes": "Claude assumption"
+    }
+  },
+  "loe_erosion": {
+    "value": 0.2,
+    "low": null,
+    "high": null,
+    "kind": "point",
+    "spread": null,
+    "unit": null,
+    "provenance": {
+      "source": null,
+      "quote": null,
+      "publisher": null,
+      "as_of": null,
+      "method": null,
+      "confidence": "assumption",
+      "notes": null
+    }
+  },
+  "differentiation_score": {
+    "value": 1.1,
+    "low": 0.95,
+    "high": 1.25,
+    "kind": "pert",
+    "spread": null,
+    "unit": null,
+    "provenance": {
+      "source": null,
+      "quote": null,
+      "publisher": null,
+      "as_of": null,
+      "method": null,
+      "confidence": "assumption",
+      "notes": "Claude assumption"
+    }
+  },
+  "peak_share": {
+    "value": 0.2,
+    "low": 0.1,
+    "high": 0.3,
+    "kind": "pert",
+    "spread": null,
+    "unit": null,
+    "provenance": {
+      "source": null,
+      "quote": null,
+      "publisher": null,
+      "as_of": null,
+      "method": null,
+      "confidence": "assumption",
+      "notes": "Claude assumption"
+    }
+  },
+  "uptake_years_to_peak": {
+    "value": 5.0,
+    "low": null,
+    "high": null,
+    "kind": "point",
+    "spread": null,
+    "unit": null,
+    "provenance": {
+      "source": null,
+      "quote": null,
+      "publisher": null,
+      "as_of": null,
+      "method": null,
+      "confidence": "assumption",
+      "notes": null
+    }
+  },
+  "clinical_loa_override": null,
+  "treatment_duration_years_override": null,
+  "territory_overrides": {
+    "mexico": {
+      "p_territory_approval": null,
+      "p_reimbursement": null,
+      "reimbursement_lag_years": null,
+      "regulatory_review_years": null,
+      "net_price_usd": null,
+      "reference_price_factor": null,
+      "peak_share": null,
+      "launch_delay_years": null,
+      "market_access_spend_usd": null,
+      "epi_rate_per_100k": null,
+      "diagnosis_rate": null,
+      "treatment_rate": null,
+      "eligible_fraction": null,
+      "competitors": [
+        {
+          "name": "Generic allopurinol/febuxostat",
+          "available_now": true,
+          "launch_year_from_now": {
+            "value": 0.0,
+            "low": null,
+            "high": null,
+            "kind": "point",
+            "spread": null,
+            "unit": null,
+            "provenance": {
+              "source": null,
+              "quote": null,
+              "publisher": null,
+              "as_of": null,
+              "method": null,
+              "confidence": "assumption",
+              "notes": null
+            }
+          },
+          "share_capture": {
+            "value": 0.25,
+            "low": 0.15,
+            "high": 0.4,
+            "kind": "pert",
+            "spread": null,
+            "unit": null,
+            "provenance": {
+              "source": null,
+              "quote": null,
+              "publisher": null,
+              "as_of": null,
+              "method": null,
+              "confidence": "assumption",
+              "notes": "Claude assumption"
+            }
+          }
+        }
+      ],
+      "notes": null
+    },
+    "brazil": {
+      "p_territory_approval": null,
+      "p_reimbursement": null,
+      "reimbursement_lag_years": null,
+      "regulatory_review_years": null,
+      "net_price_usd": null,
+      "reference_price_factor": null,
+      "peak_share": null,
+      "launch_delay_years": null,
+      "market_access_spend_usd": null,
+      "epi_rate_per_100k": null,
+      "diagnosis_rate": null,
+      "treatment_rate": null,
+      "eligible_fraction": null,
+      "competitors": [
+        {
+          "name": "Generic allopurinol/febuxostat",
+          "available_now": true,
+          "launch_year_from_now": {
+            "value": 0.0,
+            "low": null,
+            "high": null,
+            "kind": "point",
+            "spread": null,
+            "unit": null,
+            "provenance": {
+              "source": null,
+              "quote": null,
+              "publisher": null,
+              "as_of": null,
+              "method": null,
+              "confidence": "assumption",
+              "notes": null
+            }
+          },
+          "share_capture": {
+            "value": 0.25,
+            "low": 0.15,
+            "high": 0.4,
+            "kind": "pert",
+            "spread": null,
+            "unit": null,
+            "provenance": {
+              "source": null,
+              "quote": null,
+              "publisher": null,
+              "as_of": null,
+              "method": null,
+              "confidence": "assumption",
+              "notes": "Claude assumption"
+            }
+          }
+        }
+      ],
+      "notes": null
+    },
+    "saudi_arabia": {
+      "p_territory_approval": null,
+      "p_reimbursement": null,
+      "reimbursement_lag_years": null,
+      "regulatory_review_years": null,
+      "net_price_usd": null,
+      "reference_price_factor": null,
+      "peak_share": null,
+      "launch_delay_years": null,
+      "market_access_spend_usd": null,
+      "epi_rate_per_100k": null,
+      "diagnosis_rate": null,
+      "treatment_rate": null,
+      "eligible_fraction": null,
+      "competitors": [
+        {
+          "name": "Generic allopurinol/febuxostat",
+          "available_now": true,
+          "launch_year_from_now": {
+            "value": 0.0,
+            "low": null,
+            "high": null,
+            "kind": "point",
+            "spread": null,
+            "unit": null,
+            "provenance": {
+              "source": null,
+              "quote": null,
+              "publisher": null,
+              "as_of": null,
+              "method": null,
+              "confidence": "assumption",
+              "notes": null
+            }
+          },
+          "share_capture": {
+            "value": 0.25,
+            "low": 0.15,
+            "high": 0.4,
+            "kind": "pert",
+            "spread": null,
+            "unit": null,
+            "provenance": {
+              "source": null,
+              "quote": null,
+              "publisher": null,
+              "as_of": null,
+              "method": null,
+              "confidence": "assumption",
+              "notes": "Claude assumption"
+            }
+          }
+        }
+      ],
+      "notes": null
+    }
+  }
+}
