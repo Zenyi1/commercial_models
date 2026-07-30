@@ -33,7 +33,7 @@ from valuation_engine.report import render_portfolio, render_text, value_territo
 from valuation_engine.research.cache import CachingProvider, ResearchCache
 from valuation_engine.research.llm_extractor import make_llm_extractor
 from valuation_engine.research.provider import EscalatingProvider, MultiSourceProvider
-from valuation_engine.research.valyu_deepresearch import ValyuDeepResearchProvider
+from valuation_engine.research.valyu_deepresearch import BatchDeepResearchProvider
 from valuation_engine.research.valyu_provider import ValyuProvider
 
 
@@ -110,9 +110,16 @@ def build_research_provider():
     # answer (slower/costlier — fires only on the residual None keys). Both tiers
     # are cache-backed, so a rerun collects prior results for free.
     if os.getenv("ENRICH_ESCALATE") == "1":
-        deep = ValyuDeepResearchProvider(extractor=extractor, cache=cache, refresh=refresh)
+        # One combined DeepResearch task per territory, Haiku extracts each field
+        # off the shared report. RESEARCH_ALLOW_ESTIMATE lets it derive a grounded
+        # low-confidence figure when none is stated outright.
+        allow_estimate = os.getenv("RESEARCH_ALLOW_ESTIMATE") == "1"
+        deep_extractor = (make_llm_extractor(max_chars=24000, allow_estimate=allow_estimate)
+                          if os.getenv("ANTHROPIC_API_KEY") else None)
+        deep = BatchDeepResearchProvider(extractor=deep_extractor, cache=cache, refresh=refresh)
         ladder = EscalatingProvider([CachingProvider(valyu, cache, refresh), deep])
-        return MultiSourceProvider([ladder]), f"Valyu (live) + {mode} + DeepResearch fallback [cached]"
+        est = " +estimate" if allow_estimate else ""
+        return MultiSourceProvider([ladder]), f"Valyu (live) + {mode} + DeepResearch(batch){est} [cached]"
     return MultiSourceProvider([CachingProvider(valyu, cache, refresh)]), f"Valyu (live) + {mode} [cached]"
 
 

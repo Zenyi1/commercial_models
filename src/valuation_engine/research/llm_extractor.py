@@ -102,6 +102,21 @@ _SYSTEM = (
     "interpretation, 'low' for a weak or indirect source. Never fabricate."
 )
 
+# Estimate mode: the figure may be DERIVED from evidence in the passages when it
+# isn't stated outright — but a derivation must be grounded and is always `low`
+# confidence. A guess with no supporting evidence is still forbidden.
+_SYSTEM_ESTIMATE = (
+    "You produce a single numeric parameter for a biotech territorial-rights valuation "
+    "from the SOURCE PASSAGES provided. Prefer a value the passages STATE directly. If "
+    "none is stated but the passages contain enough related evidence to DERIVE or "
+    "reasonably estimate the value (e.g. compute a rate from stated counts, or infer a "
+    "price band from named comparators), you MAY do so: set found=true, give value and a "
+    "low/high range, set confidence='low', and in 'quote' cite the exact evidence you "
+    "based the estimate on. CRITICAL: if the passages give NO basis to estimate from, set "
+    "found=false — never guess from prior knowledge or thin air. Set 'source_url' to the "
+    "passage URL your figure or evidence came from."
+)
+
 
 def _kind_bounds(key: str) -> str:
     if key in _PROBABILITY_KEYS:
@@ -172,6 +187,7 @@ def make_llm_extractor(
     model: Optional[str] = None,
     client: Optional[AnthropicClient] = None,
     max_chars: int = _MAX_CHARS_PER_PASSAGE,
+    allow_estimate: bool = False,
 ) -> Extractor:
     """Build an extractor closure with the ``(key, results) -> SourcedValue|None`` shape.
 
@@ -179,8 +195,11 @@ def make_llm_extractor(
     production, pass nothing: the key comes from ``ANTHROPIC_API_KEY`` and the
     model from ``ANTHROPIC_MODEL`` (default ``claude-opus-4-8``). ``max_chars``
     caps per-passage length — raise it for long DeepResearch reports.
+    ``allow_estimate=True`` lets the model DERIVE a grounded, low-confidence
+    figure when none is stated outright (never a baseless guess).
     """
     resolved_model = model or os.getenv("ANTHROPIC_MODEL") or _DEFAULT_MODEL
+    system = _SYSTEM_ESTIMATE if allow_estimate else _SYSTEM
 
     def _make_client() -> AnthropicClient:
         return client or AnthropicClient(
@@ -192,7 +211,7 @@ def make_llm_extractor(
             return None
         try:
             data = _make_client().extract_json(
-                _SYSTEM, _build_user_prompt(key, results, max_chars), _EXTRACTION_SCHEMA
+                system, _build_user_prompt(key, results, max_chars), _EXTRACTION_SCHEMA
             )
         except (urllib.error.URLError, TimeoutError, ValueError, OSError, KeyError):
             # A flaky/unauthorized LLM must not sink the valuation — fall back.

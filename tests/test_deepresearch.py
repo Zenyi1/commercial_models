@@ -160,3 +160,75 @@ def test_deepresearch_swallows_submit_errors(tmp_path):
 
     prov = _provider(_Boom(), ResearchCache(tmp_path / "c.json"), extractor=lambda k, r: None)
     assert prov.get(ResearchQuery(key="net_price_usd", territory_id="mexico", asset_id="A1")) is None
+
+
+# --------------------------------------------------------------------------- #
+# BatchDeepResearchProvider — one task per territory, per-field extraction
+# --------------------------------------------------------------------------- #
+from valuation_engine.research.valyu_deepresearch import BatchDeepResearchProvider  # noqa: E402
+
+_BATCH_REPORT = {"status": "completed",
+                 "output": "Net price ~$1200/yr. Reimbursement probability ~45%.",
+                 "sources": [{"title": "X", "url": "https://x"}]}
+
+
+class _BatchClient:
+    def __init__(self, task):
+        self.task = task
+        self.submits = 0
+
+    def submit(self, query, mode=None):
+        self.submits += 1
+        return "BATCH-TID"
+
+    def poll_until(self, task_id, timeout_s=0, interval_s=0):
+        return "completed", self.task
+
+
+def test_batch_one_submit_across_keys(tmp_path):
+    cache = ResearchCache(tmp_path / "c.json")
+    client = _BatchClient(_BATCH_REPORT)
+
+    def ex(key, results):
+        assert "Net price" in results[0].content  # each key sees the shared report
+        return SourcedValue(value=1.0, kind="point")
+
+    prov = BatchDeepResearchProvider(api_key="k", cache=cache, extractor=ex,
+                                     keys=("net_price_usd", "p_reimbursement"))
+    prov._make_client = lambda: client
+    q1 = ResearchQuery(key="net_price_usd", territory_id="brazil", asset_id="A1", indication="gout")
+    q2 = ResearchQuery(key="p_reimbursement", territory_id="brazil", asset_id="A1", indication="gout")
+    assert prov.get(q1) is not None and prov.get(q2) is not None
+    assert client.submits == 1  # ONE deep task covers both keys
+    assert cache.get(prov._report_key(q1))["status"] == "done"
+    assert cache.get(cache_key(q1, "deep"))["status"] == "done"
+
+
+def test_batch_reuses_cached_report(tmp_path):
+    cache = ResearchCache(tmp_path / "c.json")
+    q = ResearchQuery(key="net_price_usd", territory_id="brazil", asset_id="A1")
+    prov = BatchDeepResearchProvider(api_key="k", cache=cache,
+                                     extractor=lambda k, r: SourcedValue(value=2.0, kind="point"))
+    cache.set(prov._report_key(q), {"status": "done", "task_id": "T",
+                                    "report": "Some report text", "updated_at": None})
+    client = _BatchClient(_BATCH_REPORT)
+    prov._make_client = lambda: client
+    sv = prov.get(q)
+    assert sv.value == 2.0 and client.submits == 0  # used cached report, no re-pay
+
+
+def test_batch_timeout_keeps_report_running(tmp_path):
+    cache = ResearchCache(tmp_path / "c.json")
+
+    class _T:
+        def submit(self, query, mode=None):
+            return "TID"
+
+        def poll_until(self, task_id, timeout_s=0, interval_s=0):
+            return "timeout", None
+
+    prov = BatchDeepResearchProvider(api_key="k", cache=cache, extractor=lambda k, r: None)
+    prov._make_client = lambda: _T()
+    q = ResearchQuery(key="net_price_usd", territory_id="brazil", asset_id="A1")
+    assert prov.get(q) is None
+    assert cache.get(prov._report_key(q))["status"] == "running"  # resume next run

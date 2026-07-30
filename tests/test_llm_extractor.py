@@ -106,3 +106,18 @@ def test_llm_extractor_swallows_backend_errors():
 def test_anthropic_client_requires_key():
     with pytest.raises(ValueError):
         AnthropicClient(api_key="", model="claude-opus-4-8")
+
+
+def test_estimate_mode_uses_estimate_prompt_and_low_confidence():
+    captured = {}
+
+    class _F:
+        def extract_json(self, system, user, schema, max_tokens=1024):
+            captured["system"] = system
+            return {"found": True, "value": 0.4, "low": 0.3, "high": 0.5, "unit": "fraction",
+                    "quote": "derived from stated counts", "source_url": "u", "confidence": "low"}
+
+    ex = make_llm_extractor(client=_F(), allow_estimate=True)
+    sv = ex("treatment_rate", RESULTS)
+    assert sv is not None and sv.kind == "pert" and sv.provenance.confidence == "low"
+    assert "estimate" in captured["system"].lower()  # used the estimate system prompt
